@@ -22,29 +22,24 @@ export default function TrendingGrid() {
 
   if (loading) {
     return (
-      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+      <div className="w-full max-w-7xl px-4 py-24 sm:px-6">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white">Live Trending Tokens</h2>
+          <h2 className="text-3xl font-bold text-text-primary">Live Trending Tokens</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-32 animate-pulse rounded-2xl bg-zinc-900"
-            />
+            <div key={i} className="h-32 animate-pulse rounded-2xl bg-bg-secondary" />
           ))}
         </div>
-      </section>
+      </div>
     );
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+    <div className="w-full max-w-7xl px-4 py-24 sm:px-6">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white">Live Trending Tokens</h2>
-        <p className="mt-2 text-zinc-400">
-          Top traded Solana tokens right now
-        </p>
+        <h2 className="text-3xl font-bold text-text-primary">Live Trending Tokens</h2>
+        <p className="mt-2 text-text-secondary">Top traded Solana tokens right now</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -52,37 +47,33 @@ export default function TrendingGrid() {
           <button
             key={token.address}
             onClick={() => router.push(`/trade?token=${token.address}`)}
-            className="group rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 text-left transition-all hover:border-zinc-700 hover:bg-zinc-900"
+            className="group rounded-2xl border border-bg-tertiary bg-bg-secondary/50 p-5 text-left transition-all hover:border-white/20 hover:bg-bg-secondary"
           >
             <div className="mb-3 flex items-center gap-3">
               {token.logoUrl ? (
-                <img
-                  src={token.logoUrl}
-                  alt=""
-                  className="h-10 w-10 rounded-full"
-                />
+                <img src={token.logoUrl} alt="" className="h-10 w-10 rounded-full" />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-sm font-bold text-zinc-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-bg-tertiary text-sm font-bold text-text-tertiary">
                   {token.symbol?.slice(0, 2)}
                 </div>
               )}
               <div>
-                <div className="font-semibold text-white group-hover:text-[#8B5CF6]">
+                <div className="font-semibold text-text-primary group-hover:text-accent-primary">
                   {token.symbol}
                 </div>
-                <div className="text-xs text-zinc-500">{token.name}</div>
+                <div className="text-xs text-text-tertiary">{token.name}</div>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-white">
+              <span className="text-lg font-bold text-text-primary">
                 ${token.price?.toLocaleString(undefined, { maximumFractionDigits: 6 })}
               </span>
               <span
                 className={`rounded-md px-2 py-0.5 text-xs font-medium ${
                   (token.priceChange24h || 0) >= 0
-                    ? "bg-green-500/10 text-green-500"
-                    : "bg-red-500/10 text-red-500"
+                    ? "bg-green-500/10 text-[#22c55e]"
+                    : "bg-red-500/10 text-[#ef4444]"
                 }`}
               >
                 {(token.priceChange24h || 0) >= 0 ? "+" : ""}
@@ -91,13 +82,13 @@ export default function TrendingGrid() {
             </div>
 
             {token.volume24h && (
-              <div className="mt-2 text-xs text-zinc-500">
+              <div className="mt-2 text-xs text-text-tertiary">
                 Vol: ${(token.volume24h / 1000).toFixed(0)}K
               </div>
             )}
           </button>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

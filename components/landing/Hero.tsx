@@ -1,84 +1,83 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight, Download } from "lucide-react";
 
 export default function Hero() {
-  const [count, setCount] = useState(0);
-  const targetCount = 142856;
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const duration = 2000;
-    const steps = 60;
-    const increment = targetCount / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= targetCount) {
-        setCount(targetCount);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(current));
-      }
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
-    <section className="relative flex min-h-[80vh] flex-col items-center justify-center px-4 pt-24">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-[500px] w-[500px] rounded-full bg-[#8B5CF6]/10 blur-[120px]" />
-      </div>
+    <section className="flex w-full flex-col items-center justify-center">
+      <img
+        src="/fomo-assets/space-bg.webp"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-0 -z-10 w-full select-none bg-cover"
+      />
 
-      <div className="relative z-10 flex max-w-4xl flex-col items-center text-center">
-        <div className="mb-4 flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-4 py-1.5 text-xs text-zinc-400">
-          <span className="h-2 w-2 rounded-full bg-green-500" />
-          Solana mainnet live
+      <div className="flex flex-col items-center gap-3 desktop:gap-8">
+        <div className="flex flex-col items-center gap-2 px-6 pt-10 text-center desktop:pt-20">
+          {/* <div className="flex items-center"> */}
+            {/* <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-primary text-lg font-bold text-white sm:h-12 sm:w-12 sm:text-xl">
+              C
+            </div> */}
+            <span className="text-[120px]/40 font-bold tracking-tight text-slate-300">
+              ChadWallet
+            </span>
+          {/* </div> */}
+          <h1 className="text-[24px] leading-6 tracking-tighter font-medium text-text-primary desktop:text-[40px] desktop:leading-12">
+            where traders become legends.
+          </h1>
+          <p className="tracking-tight text-text-secondary desktop:text-[22px] desktop:leading-6">
+            From memecoins to viral tokens, trade any crypto in seconds.
+          </p>
         </div>
 
-        <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-          The wallet that
-          <br />
-          <span className="bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] bg-clip-text text-transparent">
-            trades while others wait
-          </span>
-        </h1>
-
-        <p className="mt-6 max-w-2xl text-base text-zinc-400 sm:text-lg">
-          Solana-native self-custody wallet with built-in trading, real-time
-          prices, and one-click swaps. No seed phrases. No delays. Just Chad.
-        </p>
-
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+        {/* Mobile buttons */}
+        <div className="flex gap-2 desktop:hidden">
           <a
             href="https://apps.apple.com/us/app/chadwallet/id6757367474"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-semibold text-black transition-all hover:bg-zinc-200"
+            className="z-2 w-50 rounded-xl border border-bg-tertiary bg-white/12 py-3 text-center text-lg font-bold backdrop-blur-md"
           >
-            Download on iOS
-            <ArrowUpRight size={16} />
-          </a>
-          <a
-            href="https://play.google.com/store/apps/details?id=xyz.chadwallet.www"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-8 py-3 text-sm font-semibold text-white transition-all hover:bg-zinc-800"
-          >
-            Get it on Android
-            <ArrowUpRight size={16} />
+            Download app
           </a>
         </div>
 
-        <div className="mt-12 flex items-center gap-3 text-zinc-500">
-          <span className="text-2xl font-bold text-white">
-            {count.toLocaleString()}
-          </span>
-          <span className="text-sm">wallets created</span>
+        {/* Desktop buttons */}
+        <div className="hidden gap-3 desktop:flex">
+          <a
+            href="/trade"
+            className="group z-2 flex hidden w-50 items-center justify-center overflow-hidden rounded-xl border border-bg-tertiary bg-[#606AF780] py-3 text-lg font-bold backdrop-blur-md transition-colors duration-150 hover:bg-[#606AF7CC] desktop:flex"
+          >
+            <span>Start trading</span>
+            <div className="flex w-0 items-center overflow-hidden opacity-0 transition-all duration-150 ease-out group-hover:w-7 group-hover:opacity-100">
+              <ArrowRight size={20} className="ml-2 shrink-0 stroke-2" />
+            </div>
+          </a>
+          <a
+            href="https://apps.apple.com/us/app/chadwallet/id6757367474"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group z-2 flex w-50 items-center justify-center overflow-hidden rounded-xl border border-bg-tertiary bg-white/12 py-3 text-lg font-bold backdrop-blur-md transition-colors duration-150 hover:bg-white/20"
+          >
+            <div className="flex w-0 items-center overflow-hidden opacity-0 transition-all duration-150 ease-out group-hover:w-7 group-hover:opacity-100">
+              <Download size={20} className="mr-2 shrink-0 text-text-primary" />
+            </div>
+            <span>Download app</span>
+          </a>
         </div>
       </div>
+
+      {/* Astronaut images */}
+      <img
+        src="/fomo-assets/astronaut-mobile.webp"
+        alt=""
+        className="-mt-16 animate-float desktop:hidden"
+      />
+      <img
+        src="/fomo-assets/astronaut.webp"
+        alt=""
+        className="-mt-10 hidden h-130 animate-float object-contain desktop:block"
+      />
     </section>
   );
 }
