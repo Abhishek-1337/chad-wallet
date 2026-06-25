@@ -1,0 +1,256 @@
+ ChadWallet — Founding Engineer Screen: Full-Stack Next.js App
+
+## Context
+You are building a production-quality web app for ChadWallet, a Solana-first crypto trading platform. This is a founding engineer technical screen. The output should be live-deployable on Vercel and demonstrate senior engineering judgment — not just working code, but clean architecture, real data, and a polished UI.
+
+---
+
+## Brand Assets
+Download and use assets from:
+https://drive.google.com/drive/folders/1j4PZng-sJHxqAATUF1WYw1_jm8nyQwCE
+
+Extract: logo, wordmark, icon, any color tokens or brand guidelines present in the folder.
+
+Mobile app links (use in landing page CTAs):
+- Android: https://play.google.com/store/apps/details?id=xyz.chadwallet.www
+- iPhone: https://apps.apple.com/us/app/chadwallet/id6757367474
+
+---
+
+## Tech Stack
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS
+- **Auth**: Privy (https://privy.io) — Sign in with Apple + Google
+- **Chain**: Solana
+- **Token data**: Codex.io API (https://docs.codex.io/)
+- **RPC**: Alchemy (https://www.alchemy.com/rpc-api) — use free tier
+- **Charts**: TradingView Charting Library (https://www.tradingview.com/charting-library-docs/latest/api/)
+- **Swaps**: Jupiter API (https://developers.jup.ag/docs/get-started)
+- **Database/storage**: Supabase (free tier)
+- **Deploy**: Vercel
+
+---
+
+## Environment Variables Needed
+NEXT_PUBLIC_PRIVY_APP_ID=
+
+PRIVY_APP_SECRET=
+
+NEXT_PUBLIC_ALCHEMY_RPC_URL=
+
+CODEX_API_KEY=
+
+NEXT_PUBLIC_SUPABASE_URL=
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+---
+
+## Page 1: Landing Page (Required)
+Reference: https://fomo.family — match that energy and layout philosophy.
+
+### Design Direction
+- Dark theme. Near-black background (#0A0A0B), with ChadWallet brand colors as accents
+- Bold, confident crypto-native aesthetic — not generic SaaS
+- Mobile-first, fully responsive
+
+### Sections (top to bottom)
+
+**1. Rotating Token Banner (Top)**
+- Horizontal ticker/marquee of real Solana tokens fetched from Codex.io
+- Each token: logo, symbol, price, 24h % change (green/red colored)
+- Infinite scroll animation, both left and right simultaneously (two rows)
+- Tapping/clicking a token navigates to `/trade?token=<address>`
+
+**2. Hero Section**
+- ChadWallet logo + wordmark
+- Tagline: something punchy, crypto-native, not generic ("The wallet that trades while others wait" — or write a better one)
+- Two CTA buttons: "Download on iOS" and "Get it on Android" (use the links above)
+- Social proof: "X wallets created" or "X trades executed" — pull from Supabase or hardcode impressive-looking numbers with a counter animation
+- Optional: subtle animated background (particle grid, moving gradient, or matrix of token prices scrolling)
+
+**3. Features Section**
+- 3–4 feature cards: Solana-native speed, built-in trading, secure auth, real-time prices
+- Use icons (lucide-react or heroicons), not emojis
+
+**4. "How It Works" Section**
+- 3 steps: Connect → Fund → Trade
+- Simple, visual, scannable
+
+**5. Live Trending Tokens Section**
+- Fetch top trending Solana tokens from Codex.io
+- Show as a grid of cards: token logo, name, symbol, price, 24h change, volume
+- Each card links to `/trade?token=<address>`
+
+**6. Rotating Token Banner (Bottom)**
+- Same marquee as top but scrolling opposite direction
+
+**7. Footer**
+- Logo, links (Twitter/X, Telegram, Discord — use # if not available), App Store + Play Store badges
+
+---
+
+## Page 2: Trading Page `/trade` (Bonus — implement if time allows)
+
+Query param: `?token=<mint_address>` — defaults to SOL/USDC if none provided.
+
+### Layout: 3-column desktop, stacked mobile
+
+**Left Column — Trending Tokens List**
+- Fetch from Codex.io: top trending Solana tokens
+- Each row: rank, logo, symbol, price, 24h % change
+- Clicking a row updates the URL param and loads that token
+- Search/filter input at top
+
+**Middle Column — Token Detail**
+- Token name, symbol, logo, current price (large), 24h change
+- TradingView chart — use lightweight-charts if full TradingView library isn't available in time
+- Tabs below chart: "Holders" | "Live Trades"
+  - Holders: fetch from Codex.io or Alchemy, show top 10 wallet addresses + % held
+  - Live Trades: poll or subscribe to recent trades, show as a live feed (wallet, type buy/sell, amount, time)
+
+**Right Column — Buy / Sell + Position**
+- Toggle: Buy | Sell
+- Input: amount in SOL or USDC
+- Estimated output (use Jupiter quote API: GET /v6/quote)
+- "Connect Wallet" button if not authenticated (Privy)
+- "Swap" button executes via Jupiter /v6/swap
+- User's current position: token balance, entry price (if tracked), current P&L
+- Show wallet SOL balance via Alchemy RPC
+
+---
+
+## Auth (Privy Setup)
+- Wrap app in `<PrivyProvider>` in layout.tsx
+- Show "Sign In" button in navbar if not authenticated
+- Supported login methods: Google, Apple
+- On auth: store user's wallet address in Supabase `users` table (upsert)
+- Solana embedded wallet via Privy — enable in Privy dashboard settings
+
+---
+
+## Data Layer (Codex.io)
+
+Key endpoints to use:
+- Trending tokens: `GET /tokens/trending?networkId=1399811149` (Solana network ID)
+- Token metadata: `GET /tokens/{address}`
+- Token price: `GET /tokens/{address}/price`
+- OHLCV for chart: `GET /tokens/{address}/ohlcv`
+- Recent trades: `GET /tokens/{address}/swaps`
+- Holders: `GET /tokens/{address}/holders`
+
+All Codex.io requests should go through a Next.js API route (`/api/codex/...`) to keep the API key server-side.
+
+---
+
+## Jupiter Integration (Swaps)
+
+Use Jupiter v6 API — no API key needed:
+- Quote: `GET https://quote-api.jup.ag/v6/quote?inputMint=...&outputMint=...&amount=...`
+- Swap: `POST https://quote-api.jup.ag/v6/swap` — returns a transaction to sign
+- Sign with Privy's Solana embedded wallet (`useSolanaWallets()`)
+- Broadcast via Alchemy RPC
+
+---
+
+## Supabase Schema
+
+```sql
+-- Users
+create table users (
+  id uuid primary key default gen_random_uuid(),
+  privy_id text unique not null,
+  wallet_address text,
+  email text,
+  created_at timestamptz default now()
+);
+
+-- Watchlist (optional)
+create table watchlist (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id),
+  token_address text not null,
+  created_at timestamptz default now()
+);
+```
+
+---
+
+## Project Structure
+/app
+
+/page.tsx              ← Landing page
+
+/trade/page.tsx        ← Trading page
+
+/api
+
+/codex/[...path]/route.ts   ← Proxy for Codex.io
+
+/jupiter/route.ts           ← Jupiter quote proxy
+
+/layout.tsx            ← PrivyProvider, global styles
+
+/components
+
+/landing
+
+TokenBanner.tsx      ← Marquee ticker
+
+Hero.tsx
+
+Features.tsx
+
+TrendingGrid.tsx
+
+/trade
+
+TokenList.tsx        ← Left column
+
+TokenChart.tsx       ← Middle column (TradingView/lightweight-charts)
+
+TradePanel.tsx       ← Right column (buy/sell)
+
+HoldersList.tsx
+
+LiveTrades.tsx
+
+/shared
+
+Navbar.tsx
+
+WalletButton.tsx     ← Privy connect button
+
+/lib
+
+/codex.ts              ← Codex.io client
+
+/alchemy.ts            ← Alchemy RPC client
+
+/supabase.ts           ← Supabase client
+
+/jupiter.ts            ← Jupiter API helpers
+
+---
+
+## Quality Bar
+- TypeScript throughout — no `any` unless unavoidable
+- Loading states on all async data (skeleton loaders, not spinners)
+- Error boundaries on chart and trade panel
+- Mobile responsive: landing page must look great on 375px; trade page collapses to tabs on mobile
+- No placeholder data on launch — everything pulls from real APIs
+- Lighthouse performance score target: 85+
+- Deploy to Vercel with all env vars set
+
+---
+
+## Deliverable
+A GitHub repo + live Vercel URL. The landing page must be live with real token data. Trading page is a bonus but will heavily differentiate the submission.
+
+Start with:
+1. `npx create-next-app@latest chadwallet --typescript --tailwind --app`
+2. Install deps: `@privy-io/react-auth @privy-io/server-auth @supabase/supabase-js @solana/web3.js lightweight-charts`
+3. Set up Privy provider and env vars
+4. Build landing page components in order (banner → hero → features → trending → footer)
+5. Wire Codex.io data through API routes
+6. Build trading page if time allows
