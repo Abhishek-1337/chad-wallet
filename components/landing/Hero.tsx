@@ -22,7 +22,7 @@ export default function Hero() {
               ChadWallet
             </span>
           {/* </div> */}
-          <h1 className="text-[24px] leading-6 tracking-tighter font-medium text-text-primary desktop:text-[40px] desktop:leading-12">
+          <h1 className="text-[24px] leading-6 tracking-normal font-semibold text-text-primary desktop:text-[37px] desktop:leading-12">
             where traders become legends.
           </h1>
           <p className="tracking-tight text-text-secondary desktop:text-[22px] desktop:leading-6">

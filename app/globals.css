@@ -1,3 +1,4 @@
+@import url("https://db.onlinewebfonts.com/c/8f2a9d487bbbc60974cd132fc3a63862?family=Aeonik+Regular");
 @import "tailwindcss";
 
 @theme {
@@ -9,8 +10,8 @@
   --color-text-secondary: #eaedff99;
   --color-text-tertiary: #eaedff4d;
   --color-accent-primary: #606af7;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Aeonik Regular", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --width-50: 12.5rem;
   --height-130: 32.5rem;
   --leading-12: 3rem;

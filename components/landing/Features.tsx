@@ -33,10 +33,10 @@ const features = [
 
 export default function Features() {
   return (
-    <div className="flex max-w-500 flex-col self-stretch px-3 pt-8 desktop:px-20 desktop:py-2">
+    <div className="flex max-w-500 flex-col self-stretch px-3 pt-6 desktop:px-20 desktop:py-2">
       {/* Desktop heading */}
       <div className="hidden flex-col gap-3 desktop:flex">
-        <h2 className="text-[60px] leading-15 tracking-tighter">
+        <h2 className="text-[60px] leading-15 tracking-tighter font-medium">
           never miss out again
         </h2>
         <p className="text-[28px] leading-6 text-text-secondary">
