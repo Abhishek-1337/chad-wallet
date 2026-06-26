@@ -6,7 +6,7 @@ export default function AvailableOnWeb() {
         <div className="font-mono text-sm font-bold text-accent-primary">
           NOW AVAILABLE ON WEB
         </div>
-        <h2 className="text-center text-[55px] leading-14 -tracking-normal font-medium">
+        <h2 className="text-center text-[60px] leading-14 -tracking-normal font-semibold">
           trade from anywhere.
           <br />
           never lose a beat.

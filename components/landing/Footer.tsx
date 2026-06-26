@@ -9,7 +9,7 @@ export default function Footer() {
             </div>
             <span className="text-lg font-bold">ChadWallet</span>
           </div>
-          <div className="text-2xl leading-7 tracking-tighter text-text-secondary">
+          <div className="text-2xl leading-7 tracking-tighter text-text-secondary font-semibold text-[#9899a3]">
             where traders become legends.
           </div>
         </div>

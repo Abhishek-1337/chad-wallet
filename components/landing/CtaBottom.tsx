@@ -38,7 +38,7 @@ export default function CtaBottom() {
       <div className="w-[80vw] px-8">
         <div className="relative flex aspect-square flex-col items-center justify-center">
           <div className="relative z-10 flex w-[70vw] flex-col items-center gap-3 desktop:gap-6">
-            <h2 className="text-center text-[40px] leading-10 tracking-tighter desktop:text-[60px] desktop:leading-15">
+            <h2 className="text-center text-[40px] leading-10 tracking-tight desktop:text-[60px] desktop:leading-15 font-semibold">
               a trading app
               <br />
               for the rest of us

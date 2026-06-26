@@ -17,7 +17,7 @@ export default function Home() {
         <TokenBanner direction="right" />
         <AvailableOnWeb />
         <Features />
-        <TrendingGrid />
+        {/* <TrendingGrid /> */}
         <CtaBottom />
       </main>
       <Footer />

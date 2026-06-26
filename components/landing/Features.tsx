@@ -33,10 +33,10 @@ const features = [
 
 export default function Features() {
   return (
-    <div className="flex max-w-500 flex-col self-stretch px-3 pt-6 desktop:px-20 desktop:py-2">
+    <div className="flex max-w-500 flex-col self-stretch px-3 pt-6 desktop:px-20 desktop:py-2 gap-24">
       {/* Desktop heading */}
       <div className="hidden flex-col gap-3 desktop:flex">
-        <h2 className="text-[60px] leading-15 tracking-tighter font-medium">
+        <h2 className="text-[60px] leading-15 tracking-normal font-semibold">
           never miss out again
         </h2>
         <p className="text-[28px] leading-6 text-text-secondary">
@@ -83,10 +83,10 @@ function FeatureCard({
 }) {
   return (
     <div className="group flex aspect-square min-w-0 flex-1 shrink flex-col overflow-hidden rounded-[25px] border border-bg-tertiary bg-bg-secondary pb-0 pt-8 transition-colors duration-300 hover:border-white/12">
-      <div className="px-8 font-mono text-sm font-bold text-accent-primary">
+      <div className="px-8 font-mono text-md font-bold text-accent-primary">
         {label}
       </div>
-      <h3 className="px-8 text-[28px] leading-8 tracking-tight desktop:text-[36px] desktop:leading-10">
+      <h3 className="px-8 text-[28px] leading-8 tracking-tight desktop:text-[36px] desktop:leading-10 font-semibold">
         {title}
       </h3>
       <div className="min-h-0 flex-1">

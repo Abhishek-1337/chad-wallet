@@ -76,7 +76,7 @@ export default function Hero() {
       <img
         src="/fomo-assets/astronaut.webp"
         alt=""
-        className="-mt-10 hidden h-130 animate-float object-contain desktop:block"
+        className="-mt-20 hidden h-130 animate-float object-contain desktop:block"
       />
     </section>
   );
