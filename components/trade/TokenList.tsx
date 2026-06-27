@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { memo, useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { getTrendingTokens, type CodexToken } from "@/lib/codex";
 
@@ -11,13 +10,16 @@ function formatPrice(price: number): string {
   return `$${price.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`;
 }
 
-export default function TokenList() {
+function TokenList({
+  activeToken,
+  setToken,
+}: {
+  activeToken: string;
+  setToken: (addr: string) => void;
+}) {
   const [tokens, setTokens] = useState<CodexToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const activeToken = searchParams.get("token");
 
   useEffect(() => {
     getTrendingTokens()
@@ -59,7 +61,10 @@ export default function TokenList() {
         {filtered.map((token, i) => (
           <button
             key={token.address}
-            onClick={() => router.push(`/trade?token=${token.address}`)}
+            onClick={() => {
+              setToken(token.address);
+              // router.push(`/trade?token=${token.address}`);
+            }}
             className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${
               activeToken === token.address
                 ? "bg-[#8B5CF6]/10"
@@ -97,3 +102,5 @@ export default function TokenList() {
     </div>
   );
 }
+
+export default memo(TokenList);

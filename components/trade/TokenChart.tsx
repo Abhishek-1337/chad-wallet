@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createChart, CandlestickSeries, type CandlestickData, ColorType } from "lightweight-charts";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { createChart, CandlestickSeries, type IChartApi, type ISeriesApi, type CandlestickData, ColorType } from "lightweight-charts";
 import HoldersList from "./HoldersList";
 import LiveTrades from "./LiveTrades";
 
@@ -14,7 +14,7 @@ interface TokenChartProps {
   priceChange24h: number;
 }
 
-type Timeframe = "1H" | "4H" | "1D" | "1W" | "1M" | "ALL";
+type Timeframe = "1H" | "4H" | "1D" | "1W" | "1M";
 
 const TIMEFRAME_CONFIG: Record<Timeframe, { interval: string; limit: number }> = {
   "1H": { interval: "1m", limit: 60 },
@@ -22,10 +22,9 @@ const TIMEFRAME_CONFIG: Record<Timeframe, { interval: string; limit: number }> =
   "1D": { interval: "15m", limit: 96 },
   "1W": { interval: "1h", limit: 168 },
   "1M": { interval: "4h", limit: 180 },
-  "ALL": { interval: "1d", limit: 365 },
 };
 
-export default function TokenChart({
+function TokenChart({
   tokenAddress,
   tokenName,
   tokenSymbol,
@@ -34,9 +33,12 @@ export default function TokenChart({
   priceChange24h,
 }: TokenChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const [activeTab, setActiveTab] = useState<"chart" | "holders" | "trades">("chart");
   const [timeframe, setTimeframe] = useState<Timeframe>("1W");
 
+  // Create chart once on mount
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -51,16 +53,9 @@ export default function TokenChart({
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
-      crosshair: {
-        mode: 0,
-      },
-      timeScale: {
-        borderColor: "#27272a",
-        timeVisible: true,
-      },
-      rightPriceScale: {
-        borderColor: "#27272a",
-      },
+      crosshair: { mode: 0 },
+      timeScale: { borderColor: "#27272a", timeVisible: true },
+      rightPriceScale: { borderColor: "#27272a" },
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
@@ -72,12 +67,37 @@ export default function TokenChart({
       wickUpColor: "#22c55e",
     });
 
+    chartRef.current = chart;
+    seriesRef.current = candleSeries;
+
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      }
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
+    };
+  }, []);
+
+  // Fetch data when token or timeframe changes
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+
+    let cancelled = false;
     const { interval, limit } = TIMEFRAME_CONFIG[timeframe];
 
     const fetchOHLCV = async () => {
       try {
         const { getTokenOHLCV } = await import("@/lib/codex");
         const raw = await getTokenOHLCV(tokenAddress, interval, limit);
+        if (cancelled) return;
         if (Array.isArray(raw)) {
           const formatted: CandlestickData[] = raw.map((d: any) => ({
             time: (d.timestamp || d.time) as any,
@@ -86,24 +106,13 @@ export default function TokenChart({
             low: d.low,
             close: d.close,
           }));
-          candleSeries.setData(formatted);
+          series.setData(formatted);
         }
       } catch {}
     };
 
     fetchOHLCV();
-
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      chart.remove();
-    };
+    return () => { cancelled = true; };
   }, [tokenAddress, timeframe]);
 
   return (
@@ -139,7 +148,7 @@ export default function TokenChart({
 
       {/* Timeframe selector */}
       <div className="mb-4 flex gap-1">
-        {(["1H", "4H", "1D", "1W", "1M", "ALL"] as Timeframe[]).map((tf) => (
+        {(["1H", "4H", "1D", "1W", "1M"] as Timeframe[]).map((tf) => (
           <button
             key={tf}
             onClick={() => setTimeframe(tf)}
@@ -176,3 +185,5 @@ export default function TokenChart({
     </div>
   );
 }
+
+export default memo(TokenChart);

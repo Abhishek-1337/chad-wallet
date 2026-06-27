@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import TokenList from "@/components/trade/TokenList";
 import TokenChart from "@/components/trade/TokenChart";
 import TradePanel from "@/components/trade/TradePanel";
@@ -17,68 +16,67 @@ interface TokenData {
   priceChange24h: number;
 }
 
+const FALLBACK: TokenData = {
+  address: DEFAULT_TOKEN,
+  name: "Solana",
+  symbol: "SOL",
+  price: 0,
+  priceChange24h: 0,
+};
+
 function TradeContentInner() {
-  const searchParams = useSearchParams();
-  const tokenAddress = searchParams.get("token") || DEFAULT_TOKEN;
-  const [tokenData, setTokenData] = useState<TokenData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [tokenAddress, setTokenAddress] = useState<string>(DEFAULT_TOKEN);
+  const [tokenData, setTokenData] = useState<TokenData>(FALLBACK);
+
+  const handleSetToken = useCallback((addr: string) => {
+    setTokenAddress(addr);
+  }, []);
 
   useEffect(() => {
-    setLoading(true);
-    import("@/lib/codex")
-      .then(({ getTokenMetadata }) => getTokenMetadata(tokenAddress))
-      .then((d) => {
-        if (d && d.address) {
-          setTokenData(d);
-        } else {
+    let cancelled = false;
+
+    fetch(`/api/codex/token?address=${tokenAddress}`)
+      .then((r) => r.json())
+      .then((token) => {
+        if (cancelled) return;
+        if (token && token.address) {
           setTokenData({
-            address: tokenAddress,
-            name: "Solana",
-            symbol: "SOL",
+            address: token.address,
+            name: token.name || "",
+            symbol: token.symbol || "",
+            logoUrl: token.info?.imageThumbUrl || token.info?.imageSmallUrl || undefined,
             price: 0,
             priceChange24h: 0,
           });
+        } else {
+          setTokenData({ ...FALLBACK, address: tokenAddress });
         }
       })
       .catch(() => {
-        setTokenData({
-          address: tokenAddress,
-          name: "Solana",
-          symbol: "SOL",
-          price: 0,
-          priceChange24h: 0,
-        });
-      })
-      .finally(() => setLoading(false));
-  }, [tokenAddress]);
+        if (!cancelled) setTokenData({ ...FALLBACK, address: tokenAddress });
+      });
 
-  if (loading) {
-    return (
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr_320px]">
-        <div className="h-[600px] animate-pulse rounded-2xl bg-zinc-900" />
-        <div className="h-[600px] animate-pulse rounded-2xl bg-zinc-900" />
-        <div className="h-[600px] animate-pulse rounded-2xl bg-zinc-900" />
-      </div>
-    );
-  }
+    return () => { cancelled = true; };
+  }, [tokenAddress]);
 
   return (
     <div className="grid gap-2 lg:grid-cols-4">
       <div className="hidden lg:block">
-        <TokenList />
+        <TokenList
+          activeToken={tokenAddress}
+          setToken={handleSetToken}
+        />
       </div>
 
       <div className="col-span-2">
-        {tokenData && (
-          <TokenChart
-            tokenAddress={tokenData.address}
-            tokenName={tokenData.name}
-            tokenSymbol={tokenData.symbol}
-            tokenLogo={tokenData.logoUrl}
-            price={tokenData.price}
-            priceChange24h={tokenData.priceChange24h}
-          />
-        )}
+        <TokenChart
+          tokenAddress={tokenData.address}
+          tokenName={tokenData.name}
+          tokenSymbol={tokenData.symbol}
+          tokenLogo={tokenData.logoUrl}
+          price={tokenData.price}
+          priceChange24h={tokenData.priceChange24h}
+        />
       </div>
 
       <div>

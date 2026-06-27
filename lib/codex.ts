@@ -73,6 +73,50 @@ const FILTER_TOKENS = `
   }
 `;
 
+const TOKEN = `
+ query Token(
+    $input: TokenInput
+  ){
+  token(
+    input: $input
+  ) {
+    id
+    address
+    networkId
+    name
+    symbol
+    decimals
+    isScam
+    creatorAddress
+    createBlockNumber
+    createTransactionHash
+    createdAt
+    exchanges {
+      address
+      color
+      exchangeVersion
+      iconUrl
+      id
+      name
+      networkId
+      tradeUrl
+    }
+    socialLinks {
+      twitter
+      telegram
+      discord
+      website
+    }
+    info {
+      circulatingSupply
+      totalSupply
+      imageSmallUrl
+      imageLargeUrl
+      description
+    }
+  }
+}`;
+
 const GET_TOKEN_PRICES = `
   query GetTokenPrices($inputs: [GetPriceInput!]!) {
     getTokenPrices(inputs: $inputs) {
@@ -143,6 +187,13 @@ const HOLDERS_QUERY = `
     }
   }
 `;
+
+export async function getTokenInfo(address: string): Promise<any> {
+  const data = await gql<{ token: any }>(TOKEN, {
+    input: { address, networkId: SOLANA_NETWORK },
+  });
+  return data.token;
+}
 
 export async function getTrendingTokens(): Promise<CodexToken[]> {
   const data = await gql<{

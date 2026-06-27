@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { ArrowDownUp } from "lucide-react";
 
@@ -11,7 +11,7 @@ interface TradePanelProps {
   tokenAddress: string;
 }
 
-export default function TradePanel({ tokenAddress }: TradePanelProps) {
+function TradePanel({ tokenAddress }: TradePanelProps) {
   const { ready, authenticated, login } = usePrivy();
   const [mode, setMode] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
@@ -160,3 +160,5 @@ export default function TradePanel({ tokenAddress }: TradePanelProps) {
     </div>
   );
 }
+
+export default memo(TradePanel);
