@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
-import type { CodexToken } from "@/lib/codex";
+import { getTrendingTokens, type CodexToken } from "@/lib/codex";
+
+function formatPrice(price: number): string {
+  if (price >= 1) return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (price >= 0.01) return `$${price.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+  return `$${price.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`;
+}
 
 export default function TokenList() {
   const [tokens, setTokens] = useState<CodexToken[]>([]);
@@ -14,12 +20,8 @@ export default function TokenList() {
   const activeToken = searchParams.get("token");
 
   useEffect(() => {
-    fetch("/api/codex/tokens/trending?networkId=1399811149")
-      .then((r) => r.json())
-      .then((data) => {
-        const list = data.data || data.tokens || data;
-        setTokens(Array.isArray(list) ? list : []);
-      })
+    getTrendingTokens()
+      .then((list) => setTokens(Array.isArray(list) ? list : []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -41,8 +43,8 @@ export default function TokenList() {
   }
 
   return (
-    <div>
-      <div className="relative mb-4">
+    <div className="border-r-2 border-slate-800 h-screen">
+      <div className="relative mb-4 px-2">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
         <input
           type="text"
@@ -53,7 +55,7 @@ export default function TokenList() {
         />
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1 h-full overflow-y-auto">
         {filtered.map((token, i) => (
           <button
             key={token.address}
@@ -64,7 +66,7 @@ export default function TokenList() {
                 : "hover:bg-zinc-900"
             }`}
           >
-            <span className="w-5 text-xs text-zinc-600">{i + 1}</span>
+            {/* <span className="w-5 text-xs text-zinc-600">{i + 1}</span> */}
             {token.logoUrl ? (
               <img src={token.logoUrl} alt="" className="h-8 w-8 rounded-full" />
             ) : (
@@ -78,7 +80,7 @@ export default function TokenList() {
             </div>
             <div className="text-right">
               <div className="text-sm text-white">
-                ${token.price?.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                {formatPrice(token.price)}
               </div>
               <div
                 className={`text-xs ${

@@ -13,12 +13,9 @@ export default function TokenBanner({ direction }: TokenBannerProps) {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/codex/tokens/trending?networkId=1399811149")
-      .then((r) => r.json())
-      .then((data) => {
-        const list = data.data || data.tokens || data;
-        setTokens(Array.isArray(list) ? list.slice(0, 20) : []);
-      })
+    import("@/lib/codex")
+      .then(({ getTrendingTokens }) => getTrendingTokens())
+      .then((list) => setTokens(Array.isArray(list) ? list.slice(0, 20) : []))
       .catch(() => {});
   }, []);
 

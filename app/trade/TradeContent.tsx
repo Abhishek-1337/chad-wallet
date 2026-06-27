@@ -25,10 +25,9 @@ function TradeContentInner() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/codex/tokens/${tokenAddress}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const d = data.data || data;
+    import("@/lib/codex")
+      .then(({ getTokenMetadata }) => getTokenMetadata(tokenAddress))
+      .then((d) => {
         if (d && d.address) {
           setTokenData(d);
         } else {
@@ -64,12 +63,12 @@ function TradeContentInner() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[320px_1fr_320px]">
+    <div className="grid gap-2 lg:grid-cols-4">
       <div className="hidden lg:block">
         <TokenList />
       </div>
 
-      <div>
+      <div className="col-span-2">
         {tokenData && (
           <TokenChart
             tokenAddress={tokenData.address}

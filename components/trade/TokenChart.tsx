@@ -14,6 +14,17 @@ interface TokenChartProps {
   priceChange24h: number;
 }
 
+type Timeframe = "1H" | "4H" | "1D" | "1W" | "1M" | "ALL";
+
+const TIMEFRAME_CONFIG: Record<Timeframe, { interval: string; limit: number }> = {
+  "1H": { interval: "1m", limit: 60 },
+  "4H": { interval: "5m", limit: 48 },
+  "1D": { interval: "15m", limit: 96 },
+  "1W": { interval: "1h", limit: 168 },
+  "1M": { interval: "4h", limit: 180 },
+  "ALL": { interval: "1d", limit: 365 },
+};
+
 export default function TokenChart({
   tokenAddress,
   tokenName,
@@ -24,6 +35,7 @@ export default function TokenChart({
 }: TokenChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"chart" | "holders" | "trades">("chart");
+  const [timeframe, setTimeframe] = useState<Timeframe>("1W");
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -60,13 +72,12 @@ export default function TokenChart({
       wickUpColor: "#22c55e",
     });
 
+    const { interval, limit } = TIMEFRAME_CONFIG[timeframe];
+
     const fetchOHLCV = async () => {
       try {
-        const res = await fetch(
-          `/api/codex/tokens/${tokenAddress}/ohlcv?interval=1h&limit=100`
-        );
-        const data = await res.json();
-        const raw = data.data || data;
+        const { getTokenOHLCV } = await import("@/lib/codex");
+        const raw = await getTokenOHLCV(tokenAddress, interval, limit);
         if (Array.isArray(raw)) {
           const formatted: CandlestickData[] = raw.map((d: any) => ({
             time: (d.timestamp || d.time) as any,
@@ -93,7 +104,7 @@ export default function TokenChart({
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [tokenAddress]);
+  }, [tokenAddress, timeframe]);
 
   return (
     <div>
@@ -125,6 +136,23 @@ export default function TokenChart({
       </div>
 
       <div ref={chartContainerRef} className="mb-4" />
+
+      {/* Timeframe selector */}
+      <div className="mb-4 flex gap-1">
+        {(["1H", "4H", "1D", "1W", "1M", "ALL"] as Timeframe[]).map((tf) => (
+          <button
+            key={tf}
+            onClick={() => setTimeframe(tf)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              timeframe === tf
+                ? "bg-zinc-800 text-white"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            {tf}
+          </button>
+        ))}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl bg-zinc-900 p-1">

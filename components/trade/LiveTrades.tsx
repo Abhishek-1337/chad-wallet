@@ -18,9 +18,8 @@ export default function LiveTrades({ tokenAddress }: { tokenAddress: string }) {
   useEffect(() => {
     const fetchTrades = async () => {
       try {
-        const res = await fetch(`/api/codex/tokens/${tokenAddress}/swaps?limit=20`);
-        const data = await res.json();
-        const list = data.data || data;
+        const { getTokenSwaps } = await import("@/lib/codex");
+        const list = await getTokenSwaps(tokenAddress, 20);
         setTrades(Array.isArray(list) ? list : []);
       } catch {}
       setLoading(false);

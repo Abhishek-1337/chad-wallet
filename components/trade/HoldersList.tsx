@@ -13,12 +13,9 @@ export default function HoldersList({ tokenAddress }: { tokenAddress: string }) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/codex/tokens/${tokenAddress}/holders`)
-      .then((r) => r.json())
-      .then((data) => {
-        const list = data.data || data;
-        setHolders(Array.isArray(list) ? list.slice(0, 10) : []);
-      })
+    import("@/lib/codex")
+      .then(({ getTokenHolders }) => getTokenHolders(tokenAddress))
+      .then((list) => setHolders(Array.isArray(list) ? list.slice(0, 10) : []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [tokenAddress]);
