@@ -82,11 +82,7 @@ export default function WalletButton() {
 
   return (
     <button
-      onClick={async () => {
-        sessionStorage.setItem("redirectAfterLogin", "1");
-        await login();
-        window.location.href = "/trade";
-      }}
+      onClick={() => login()}
       className="h-10 rounded-lg bg-bg-secondary px-5 font-bold text-text-primary ring ring-bg-tertiary transition-colors hover:bg-bg-secondary/80"
     >
       Login
