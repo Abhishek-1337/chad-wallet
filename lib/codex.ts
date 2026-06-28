@@ -39,6 +39,16 @@ export interface CodexSwap {
   signature: string;
 }
 
+export interface TokenStats {
+  price: number;
+  marketCap: number;
+  volume24h: number;
+  liquidity: number;
+  holders: number;
+  priceChange24h: number;
+  top10HoldersPercent: number;
+}
+
 const FILTER_TOKENS = `
   query FilterTokens(
     $filters: TokenFilters
@@ -196,6 +206,43 @@ const HOLDERS_QUERY = `
   }
 `;
 
+const GET_DETAILED_TOKEN_STATS = `
+  query DetailedTokenStats($tokenAddress: String!, $networkId: Int!) {
+    getDetailedTokenStats(
+      tokenAddress: $tokenAddress
+      networkId: $networkId
+      statsType: FILTERED
+      durations: [day1]
+    ) {
+      stats_day1 {
+        statsUsd {
+          volume { currentValue }
+          buyVolume { currentValue }
+          sellVolume { currentValue }
+          close { currentValue change }
+          liquidity { currentValue }
+        }
+        statsNonCurrency {
+          transactions { currentValue }
+          traders { currentValue }
+        }
+      }
+    }
+  }
+`;
+
+const GET_TOKEN_SUPPLEMENTAL = `
+  query TokenSupplemental($filters: TokenFilters!, $tokens: [String]) {
+    filterTokens(filters: $filters, tokens: $tokens, limit: 1) {
+      results {
+        marketCap
+        holders
+        top10HoldersPercent
+      }
+    }
+  }
+`;
+
 export async function getTokenInfo(address: string): Promise<any> {
   const data = await gql<{ token: any }>(TOKEN, {
     input: { address, networkId: SOLANA_NETWORK },
@@ -263,11 +310,72 @@ export async function getTokenMetadata(address: string): Promise<CodexToken> {
 }
 
 export async function getTokenPrice(address: string): Promise<{ price: number; priceChange24h: number }> {
-  const data = await gql<{ getTokenPrices: any[] }>(GET_TOKEN_PRICES, {
-    inputs: [{ address, networkId: SOLANA_NETWORK }],
-  });
-  const info = data.getTokenPrices?.[0];
-  return { price: info?.priceUsd || 0, priceChange24h: 0 };
+  const now = Math.floor(Date.now() / 1000);
+  const yesterday = now - 86400;
+
+  const [currentData, historicalData] = await Promise.all([
+    gql<{ getTokenPrices: any[] }>(GET_TOKEN_PRICES, {
+      inputs: [{ address, networkId: SOLANA_NETWORK }],
+    }),
+    gql<{ getTokenPrices: any[] }>(GET_TOKEN_PRICES, {
+      inputs: [{ address, networkId: SOLANA_NETWORK, timestamp: yesterday }],
+    }),
+  ]);
+
+  const currentPrice = currentData.getTokenPrices?.[0]?.priceUsd || 0;
+  const historicalPrice = historicalData.getTokenPrices?.[0]?.priceUsd || 0;
+  const priceChange24h = historicalPrice > 0 ? ((currentPrice - historicalPrice) / historicalPrice) * 100 : 0;
+
+  return { price: currentPrice, priceChange24h };
+}
+
+function parseStr(val: string | null | undefined): number {
+  if (val == null) return 0;
+  const n = parseFloat(val);
+  return isNaN(n) ? 0 : n;
+}
+
+export async function getTokenStats(address: string): Promise<TokenStats | null> {
+  try {
+    const [detailed, supplemental] = await Promise.all([
+      gql<{ getDetailedTokenStats: any }>(GET_DETAILED_TOKEN_STATS, {
+        tokenAddress: address,
+        networkId: SOLANA_NETWORK,
+      }),
+      gql<{ filterTokens: { results: any[] } }>(GET_TOKEN_SUPPLEMENTAL, {
+        filters: {
+          network: [SOLANA_NETWORK],
+          potentialScam: false,
+        },
+        tokens: [`${address}:${SOLANA_NETWORK}`],
+      }),
+    ]);
+
+    const day1 = detailed?.getDetailedTokenStats?.stats_day1;
+    const usd = day1?.statsUsd;
+    const nonCurrency = day1?.statsNonCurrency;
+
+    const price = parseStr(usd?.close?.currentValue);
+    const volume24h = parseStr(usd?.volume?.currentValue);
+    const liquidity = parseStr(usd?.liquidity?.currentValue);
+    // change is a decimal (-0.52 = -52%), convert to percentage
+    const rawChange = usd?.close?.change;
+    const priceChange24h = rawChange != null ? rawChange * 100 : 0;
+
+    const sup = supplemental?.filterTokens?.results?.[0];
+
+    return {
+      price,
+      marketCap: sup?.marketCap || 0,
+      volume24h,
+      liquidity,
+      holders: sup?.holders || 0,
+      priceChange24h,
+      top10HoldersPercent: sup?.top10HoldersPercent || 0,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function getTokenPrices(addresses: string[]): Promise<Map<string, number>> {
@@ -295,6 +403,20 @@ function resolutionFromInterval(interval: string): string {
   return map[interval] || "60";
 }
 
+function intervalToSeconds(interval: string): number {
+  const map: Record<string, number> = {
+    "1m": 60,
+    "5m": 300,
+    "15m": 900,
+    "30m": 1800,
+    "1h": 3600,
+    "4h": 14400,
+    "1d": 86400,
+    "1w": 604800,
+  };
+  return map[interval] || 3600;
+}
+
 export async function getTokenOHLCV(address: string, interval = "1h", limit = 100) {
   const now = Math.floor(Date.now() / 1000);
   const resolution = resolutionFromInterval(interval);
@@ -311,7 +433,7 @@ export async function getTokenOHLCV(address: string, interval = "1h", limit = 10
     };
   }>(GET_TOKEN_BARS, {
     symbol,
-    from: now - limit * 3600,
+    from: now - limit * intervalToSeconds(interval),
     to: now,
     resolution,
     countback: limit,
