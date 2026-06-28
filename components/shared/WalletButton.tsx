@@ -24,6 +24,13 @@ export default function WalletButton() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (authenticated && sessionStorage.getItem("loginIntent")) {
+      sessionStorage.removeItem("loginIntent");
+      window.location.href = "/trade";
+    }
+  }, [authenticated]);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
@@ -54,7 +61,10 @@ export default function WalletButton() {
               {wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : "Connected"}
             </div>
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                setTimeout(() => { window.location.href = "/"; }, 100);
+              }}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 transition-colors hover:bg-bg-secondary"
             >
               <svg
@@ -82,7 +92,10 @@ export default function WalletButton() {
 
   return (
     <button
-      onClick={() => login()}
+      onClick={() => {
+        sessionStorage.setItem("loginIntent", "1");
+        login();
+      }}
       className="h-10 rounded-lg bg-bg-secondary px-5 font-bold text-text-primary ring ring-bg-tertiary transition-colors hover:bg-bg-secondary/80"
     >
       Login
