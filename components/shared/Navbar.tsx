@@ -7,7 +7,7 @@ import { GooglePlayLogo } from "../logo/GooglePlayLogo";
 
 export default function Navbar({ showDownload = true }: { showDownload?: boolean }) {
   return (
-    <header className="relative z-50 hidden h-13 items-center justify-between px-5 pt-3 desktop:flex max-w-full">
+    <header className="fixed top-0 z-50 hidden h-13 w-full items-center justify-between border-b border-white/10 bg-black/60 px-5 pt-3 backdrop-blur-xl desktop:flex">
       <Link href="/" className="flex items-center text-text-primary">
         <img src="/logo/dark.png" alt="ChadWallet" className="h-8 w-auto" />
         <span className="ml-2 text-lg font-bold text-white">ChadWallet</span>

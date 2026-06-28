@@ -3,7 +3,7 @@ import TradeContent from "./TradeContent";
 
 export default function TradePage() {
   return (
-    <main className="mx-auto max-w-8xl pt-10">
+    <main className="mx-auto max-w-8xl">
       <Suspense fallback={
         <div className="flex items-center justify-center py-32">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#8B5CF6] border-t-transparent" />

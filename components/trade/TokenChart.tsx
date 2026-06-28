@@ -5,6 +5,7 @@ import { createChart, CandlestickSeries, type IChartApi, type ISeriesApi, type C
 import HoldersList from "./HoldersList";
 import LiveTrades from "./LiveTrades";
 import TokenAbout from "./TokenAbout";
+import type { TokenStats } from "@/lib/codex";
 
 interface TokenChartProps {
   tokenAddress: string;
@@ -13,6 +14,7 @@ interface TokenChartProps {
   tokenLogo?: string;
   price: number;
   priceChange24h: number;
+  tokenStats?: TokenStats | null;
   fullTokenData?: {
     description?: string;
     totalSupply?: string;
@@ -31,6 +33,19 @@ interface TokenChartProps {
 type Tab = "chart" | "holders" | "trades" | "about";
 type Timeframe = "1H" | "4H" | "1D" | "1W" | "1M";
 
+function formatCompact(value: number): string {
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+  if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
+  return `$${value.toFixed(0)}`;
+}
+
+function formatPrice(value: number): string {
+  if (value >= 1) return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  if (value >= 0.01) return `$${value.toFixed(4)}`;
+  return `$${value.toFixed(8)}`;
+}
+
 const TIMEFRAME_CONFIG: Record<Timeframe, { interval: string; limit: number }> = {
   "1H": { interval: "1m", limit: 60 },
   "4H": { interval: "5m", limit: 48 },
@@ -46,6 +61,7 @@ function TokenChart({
   tokenLogo,
   price,
   priceChange24h,
+  tokenStats,
   fullTokenData,
 }: TokenChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -53,27 +69,24 @@ function TokenChart({
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("chart");
   const [timeframe, setTimeframe] = useState<Timeframe>("1W");
-  const [livePrice, setLivePrice] = useState<number>(price);
+  const [polledPrice, setPolledPrice] = useState<number | null>(null);
 
-  // Sync livePrice when prop changes (e.g. token switch)
-  useEffect(() => {
-    setLivePrice(price);
-  }, [price]);
-
-  // Poll live price every 10s
+  // Poll live price every 10s; resets on token change via the effect cleanup + re-run
   useEffect(() => {
     let cancelled = false;
     const poll = async () => {
       try {
         const { getTokenPrice } = await import("@/lib/codex");
         const data = await getTokenPrice(tokenAddress);
-        if (!cancelled && data.price) setLivePrice(data.price);
+        if (!cancelled) setPolledPrice(data.price || null);
       } catch {}
     };
     poll();
     const id = setInterval(poll, 10000);
     return () => { cancelled = true; clearInterval(id); };
   }, [tokenAddress]);
+
+  const livePrice = polledPrice ?? price;
 
   // Create chart once on mount
   useEffect(() => {
@@ -163,7 +176,7 @@ function TokenChart({
         {tokenLogo && (
           <img src={tokenLogo} alt="" className="h-10 w-10 rounded-full" />
         )}
-        <div>
+    <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white">{tokenSymbol || "SOL"}</h2>
             <span className="text-sm text-zinc-400">{tokenName || "Solana"}</span>
@@ -185,6 +198,40 @@ function TokenChart({
           </div>
         </div>
       </div>
+
+      {/* Token stats info bar */}
+      {tokenStats && (
+        <div className="relative mb-4 flex-1 min-w-0">
+          <div className="no-scrollbar overflow-x-auto overflow-y-hidden cursor-grab">
+            <div className="flex w-full">
+              <div className="ml-auto">
+                <div className="flex w-max shrink-0 items-center gap-2 tabular-nums">
+                  <div className="flex flex-col items-center w-26 cursor-default py-2">
+                    <span className="text-xs text-zinc-500">Market cap</span>
+                    <span className="text-lg font-medium leading-tight text-white">{formatCompact(tokenStats.marketCap)}</span>
+                  </div>
+                  <InfoCard label="Price" value={formatPrice(tokenStats.price)} />
+                  <InfoCard
+                    label="24H change"
+                    value={
+                      <span className={`flex items-center gap-0.5 ${tokenStats.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}`}>
+                        <span className="text-[8px]">{tokenStats.priceChange24h >= 0 ? "▲" : "▼"}</span>
+                        <span className="text-sm font-medium">{Math.abs(tokenStats.priceChange24h).toFixed(2)}%</span>
+                      </span>
+                    }
+                  />
+                  <InfoCard label="24H Vol." value={formatCompact(tokenStats.volume24h)} />
+                  <InfoCard label="Liquidity" value={formatCompact(tokenStats.liquidity)} />
+                  <InfoCard label="Holders" value={tokenStats.holders.toLocaleString()} />
+                  <InfoCard label="Top 10 holding" value={`${tokenStats.top10HoldersPercent.toFixed(2)}%`} />
+                </div>
+              </div>
+              <div className="w-4 shrink-0" aria-hidden="true" />
+            </div>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l to-transparent from-zinc-950" />
+        </div>
+      )}
 
       {activeTab === "chart" && (
         <>
@@ -231,6 +278,17 @@ function TokenChart({
           <TokenAbout tokenAddress={tokenAddress} token={fullTokenData} />
         </div>
       )}
+    </div>
+  );
+}
+
+function InfoCard({ label, value }: { label: string; value: string | React.ReactNode }) {
+  return (
+    <div className="flex shrink-0 flex-col items-center rounded-lg bg-zinc-900 min-w-22 px-2 py-1.5">
+      <span className="text-xs text-zinc-500 whitespace-nowrap">{label}</span>
+      <div className="text-sm whitespace-nowrap min-h-5 flex items-center tabular-nums text-white">
+        {value}
+      </div>
     </div>
   );
 }

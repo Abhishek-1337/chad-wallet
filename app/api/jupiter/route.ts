@@ -1,38 +1,44 @@
 import { NextRequest } from "next/server";
 
-const JUPITER_QUOTE_API = "https://quote-api.jup.ag/v6";
+const BASE_URL = "https://api.jup.ag/swap/v2";
+
+function getHeaders() {
+  const apiKey = process.env.NEXT_PRODUCER_JUPITER_API_KEY;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (apiKey) headers["x-api-key"] = apiKey;
+  return headers;
+}
+
+async function proxyError(res: Response) {
+  const body = await res.text();
+  let json: Record<string, unknown>;
+  try { json = JSON.parse(body); } catch { json = { error: body }; }
+  return Response.json(json, { status: res.status });
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const action = searchParams.get("action");
 
-  if (action === "quote") {
+  if (action === "order") {
     const inputMint = searchParams.get("inputMint");
     const outputMint = searchParams.get("outputMint");
     const amount = searchParams.get("amount");
-    const slippageBps = searchParams.get("slippageBps") || "50";
+    const taker = searchParams.get("taker");
 
-    if (!inputMint || !outputMint || !amount) {
+    if (!inputMint || !outputMint || !amount || !taker) {
       return Response.json(
-        { error: "Missing required params: inputMint, outputMint, amount" },
-        { status: 400 }
+        { error: "Missing required params: inputMint, outputMint, amount, taker" },
+        { status: 400 },
       );
     }
 
-    const params = new URLSearchParams({
-      inputMint,
-      outputMint,
-      amount,
-      slippageBps,
-    });
+    const params = new URLSearchParams({ inputMint, outputMint, amount, taker });
+    const slippageBps = searchParams.get("slippageBps");
+    if (slippageBps) params.set("slippageBps", slippageBps);
 
-    const res = await fetch(`${JUPITER_QUOTE_API}/quote?${params}`);
-    if (!res.ok) {
-      return Response.json(
-        { error: `Jupiter API error: ${res.status}` },
-        { status: res.status }
-      );
-    }
+    const res = await fetch(`${BASE_URL}/order?${params}`, { headers: getHeaders() });
+    if (!res.ok) return proxyError(res);
 
     const data = await res.json();
     return Response.json(data);
@@ -44,19 +50,21 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const res = await fetch(`${JUPITER_QUOTE_API}/swap`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  if (body.signedTransaction && body.requestId) {
+    const res = await fetch(`${BASE_URL}/execute`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        signedTransaction: body.signedTransaction,
+        requestId: body.requestId,
+      }),
+    });
 
-  if (!res.ok) {
-    return Response.json(
-      { error: `Jupiter swap error: ${res.status}` },
-      { status: res.status }
-    );
+    if (!res.ok) return proxyError(res);
+
+    const data = await res.json();
+    return Response.json(data);
   }
 
-  const data = await res.json();
-  return Response.json(data);
+  return Response.json({ error: "Invalid request body" }, { status: 400 });
 }

@@ -1,29 +1,56 @@
 "use client";
 
-import { memo, useState, useEffect } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { ArrowDownUp } from "lucide-react";
+import { useWallets, useSignTransaction } from "@privy-io/react-auth/solana";
+import { VersionedTransaction, PublicKey } from "@solana/web3.js";
+import { ArrowDownUp, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { getConnection } from "@/lib/alchemy";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
-const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+
+function toBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
 
 interface TradePanelProps {
   tokenAddress: string;
 }
 
+type TxStatus = "idle" | "signing" | "sending" | "confirmed" | "failed";
+
 function TradePanel({ tokenAddress }: TradePanelProps) {
   const { ready, authenticated, login } = usePrivy();
+  const { wallets } = useWallets();
+  const { signTransaction } = useSignTransaction();
   const [mode, setMode] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
-  const [quote, setQuote] = useState<{ outAmount: string; priceImpactPct: string } | null>(null);
+  const [quote, setQuote] = useState<{ outAmount: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [swapping, setSwapping] = useState(false);
+  const [txStatus, setTxStatus] = useState<TxStatus>("idle");
+  const [txSignature, setTxSignature] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [solBalance, setSolBalance] = useState<number | null>(null);
+
+  const wallet = wallets?.[0];
+  const userAddress = wallet?.address;
 
   const inputMint = mode === "buy" ? SOL_MINT : tokenAddress;
   const outputMint = mode === "buy" ? tokenAddress : SOL_MINT;
+  const sameMint = inputMint === outputMint;
 
   useEffect(() => {
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!authenticated || !userAddress) return;
+    getConnection().getBalance(new PublicKey(userAddress))
+      .then((b) => setSolBalance(b / 1e9))
+      .catch(() => {});
+  }, [authenticated, userAddress]);
+
+  useEffect(() => {
+    if (!amount || parseFloat(amount) <= 0 || sameMint) {
       setQuote(null);
       return;
     }
@@ -32,10 +59,11 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
       setLoading(true);
       try {
         const params = new URLSearchParams({
-          action: "quote",
+          action: "order",
           inputMint,
           outputMint,
           amount: (parseFloat(amount) * 1e9).toString(),
+          taker: userAddress || "",
           slippageBps: "50",
         });
         const res = await fetch(`/api/jupiter?${params}`);
@@ -43,7 +71,6 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
         if (data.outAmount) {
           setQuote({
             outAmount: (parseFloat(data.outAmount) / 1e9).toFixed(6),
-            priceImpactPct: data.priceImpactPct,
           });
         }
       } catch {}
@@ -51,7 +78,65 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
     }, 500);
 
     return () => clearTimeout(debounce);
-  }, [amount, inputMint, outputMint]);
+  }, [amount, inputMint, outputMint, userAddress]);
+
+  const handleSwap = useCallback(async () => {
+    if (!wallet || !userAddress || !amount || parseFloat(amount) <= 0) return;
+
+    setSwapping(true);
+    setTxStatus("signing");
+    setError(null);
+    setTxSignature(null);
+
+    try {
+      const params = new URLSearchParams({
+        action: "order",
+        inputMint,
+        outputMint,
+        amount: (parseFloat(amount) * 1e9).toString(),
+        taker: userAddress,
+        slippageBps: "50",
+      });
+      const orderRes = await fetch(`/api/jupiter?${params}`);
+      const orderData = await orderRes.json();
+      if (!orderData.transaction) throw new Error(orderData.errorMessage || "Failed to get order");
+
+      const txBytes = Uint8Array.from(atob(orderData.transaction), (c) => c.charCodeAt(0));
+      const transaction = VersionedTransaction.deserialize(txBytes);
+
+      setTxStatus("signing");
+      const { signedTransaction } = await signTransaction({
+        transaction: transaction.serialize(),
+        wallet,
+        chain: "solana:mainnet" as any,
+      });
+
+      setTxStatus("sending");
+      const signedTxBase64 = toBase64(signedTransaction);
+
+      const executeRes = await fetch("/api/jupiter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          signedTransaction: signedTxBase64,
+          requestId: orderData.requestId,
+        }),
+      });
+      const executeData = await executeRes.json();
+
+      if (executeData.status === "Success") {
+        setTxSignature(executeData.signature);
+        setTxStatus("confirmed");
+      } else {
+        throw new Error(executeData.error || "Swap failed");
+      }
+    } catch (err: any) {
+      setTxStatus("failed");
+      setError(err?.message || "Swap failed");
+    } finally {
+      setSwapping(false);
+    }
+  }, [wallet, userAddress, amount, inputMint, outputMint, signTransaction]);
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
@@ -122,13 +207,58 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
               "0.00"
             )}
           </div>
-          {quote && quote.priceImpactPct && parseFloat(quote.priceImpactPct) > 0 && (
+          {sameMint && (
             <div className="mt-1 text-xs text-zinc-500">
-              Price impact: {parseFloat(quote.priceImpactPct).toFixed(2)}%
+              Select a different token to swap
+            </div>
+          )}
+          {quote && parseFloat(quote.outAmount) > 0 && !sameMint && (
+            <div className="mt-1 text-xs text-zinc-500">
+              Est. ~{quote.outAmount} {mode === "buy" ? "tokens" : "SOL"}
             </div>
           )}
         </div>
       </div>
+
+      {/* Status display */}
+      {txStatus !== "idle" && (
+        <div className="mb-4 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm">
+          {txStatus === "signing" && (
+            <div className="flex items-center gap-2 text-yellow-400">
+              <Loader2 size={14} className="animate-spin" />
+              Signing transaction...
+            </div>
+          )}
+          {txStatus === "sending" && (
+            <div className="flex items-center gap-2 text-yellow-400">
+              <Loader2 size={14} className="animate-spin" />
+              Sending transaction...
+            </div>
+          )}
+          {txStatus === "confirmed" && (
+            <div className="flex items-center gap-2 text-green-400">
+              <CheckCircle size={14} />
+              Swap confirmed
+              {txSignature && (
+                <a
+                  href={`https://solscan.io/tx/${txSignature}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto text-[#8B5CF6] underline"
+                >
+                  View
+                </a>
+              )}
+            </div>
+          )}
+          {txStatus === "failed" && (
+            <div className="flex items-center gap-2 text-red-400">
+              <XCircle size={14} />
+              {error || "Swap failed"}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* CTA */}
       {!ready || !authenticated ? (
@@ -140,10 +270,20 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
         </button>
       ) : (
         <button
-          disabled={!amount || parseFloat(amount) <= 0}
+          onClick={handleSwap}
+          disabled={swapping || !amount || parseFloat(amount) <= 0 || !quote || sameMint}
           className="w-full rounded-xl bg-[#8B5CF6] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#7C3AED] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {mode === "buy" ? "Buy" : "Sell"}
+          {swapping ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 size={14} className="animate-spin" />
+              Swapping...
+            </span>
+          ) : mode === "buy" ? (
+            "Buy"
+          ) : (
+            "Sell"
+          )}
         </button>
       )}
 
@@ -156,6 +296,12 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
           <span>Slippage</span>
           <span className="text-zinc-400">0.5%</span>
         </div>
+        {solBalance !== null && (
+          <div className="flex justify-between">
+            <span>SOL Balance</span>
+            <span className="text-zinc-400">{solBalance.toFixed(4)}</span>
+          </div>
+        )}
       </div>
     </div>
   );

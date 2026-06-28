@@ -1,9 +1,11 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
+import { useRouter } from "next/navigation";
 
 export default function WalletButton() {
   const { ready, authenticated, user, login, logout } = usePrivy();
+  const router = useRouter();
 
   if (!ready) {
     return <div className="h-10 w-20 animate-pulse rounded-lg bg-bg-tertiary" />;
@@ -27,7 +29,10 @@ export default function WalletButton() {
 
   return (
     <button
-      onClick={login}
+      onClick={async () => {
+        await login();
+        router.push("/trade");
+      }}
       className="h-10 rounded-lg bg-bg-secondary px-5 font-bold text-text-primary ring ring-bg-tertiary transition-colors hover:bg-bg-secondary/80"
     >
       Login

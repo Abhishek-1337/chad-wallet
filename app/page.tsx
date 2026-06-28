@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <div className="relative isolate flex min-h-svh flex-col overflow-x-hidden">
       <Navbar />
-      <main className="flex w-full flex-1 flex-col items-center justify-center">
+      <main className="flex w-full flex-1 flex-col items-center justify-center pt-13">
         {/* <TokenBanner direction="left" /> */}
         <Hero />
         <TokenBanner direction="right" />

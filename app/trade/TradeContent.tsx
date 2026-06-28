@@ -6,6 +6,7 @@ import TokenList from "@/components/trade/TokenList";
 import TokenChart from "@/components/trade/TokenChart";
 import TradePanel from "@/components/trade/TradePanel";
 import TokenAbout from "@/components/trade/TokenAbout";
+import type { TokenStats } from "@/lib/codex";
 
 const DEFAULT_TOKEN = "So11111111111111111111111111111111111111112";
 
@@ -48,6 +49,7 @@ function TradeContentInner() {
   const [tokenAddress, setTokenAddress] = useState<string>(DEFAULT_TOKEN);
   const [tokenData, setTokenData] = useState<TokenData>(FALLBACK);
   const [fullTokenData, setFullTokenData] = useState<FullTokenData | null>(null);
+  const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
 
   const handleSetToken = useCallback((addr: string) => {
     setTokenAddress(addr);
@@ -59,8 +61,9 @@ function TradeContentInner() {
     Promise.all([
       fetch(`/api/codex/token?address=${tokenAddress}`).then((r) => r.json()),
       import("@/lib/codex").then(({ getTokenPrice }) => getTokenPrice(tokenAddress)),
+      import("@/lib/codex").then(({ getTokenStats }) => getTokenStats(tokenAddress)),
     ])
-      .then(([token, priceData]) => {
+      .then(([token, priceData, stats]) => {
         if (cancelled) return;
         if (token && token.address) {
           setTokenData({
@@ -88,15 +91,19 @@ function TradeContentInner() {
             freezable: token.freezable,
             info: token.info,
           });
+          console.log(stats);
+          setTokenStats(stats);
         } else {
           setTokenData({ ...FALLBACK, address: tokenAddress });
           setFullTokenData(null);
+          setTokenStats(null);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setTokenData({ ...FALLBACK, address: tokenAddress });
           setFullTokenData(null);
+          setTokenStats(null);
         }
       });
 
@@ -106,31 +113,36 @@ function TradeContentInner() {
   return (
     <div className="flex min-h-svh flex-col">
       <Navbar showDownload={false} />
-      <div className="grid gap-2 lg:grid-cols-4 flex-1 p-2">
-      <div className="hidden lg:block">
-        <TokenList
-          activeToken={tokenAddress}
-          setToken={handleSetToken}
-        />
-      </div>
+      {/* <div className="grid gap-2 lg:grid-cols-4 flex-1 p-2 pt-16"> */}
+      <div className="flex p-2 pt-16 min-h-0">
+        <div className="lg:block">
+          <TokenList
+            activeToken={tokenAddress}
+            setToken={handleSetToken}
+          />
+        </div>
 
-      <div className="col-span-2">
-        <TokenChart
-          tokenAddress={tokenData.address}
-          tokenName={tokenData.name}
-          tokenSymbol={tokenData.symbol}
-          tokenLogo={tokenData.logoUrl}
-          price={tokenData.price}
-          priceChange24h={tokenData.priceChange24h}
-          fullTokenData={fullTokenData || undefined}
-        />
-      </div>
+        <div className="min-w-0 flex-1 grid lg:grid-cols-4 gap-2">
+          <div className="lg:col-span-3 min-w-0">
+            <TokenChart
+              key={tokenData.address}
+              tokenAddress={tokenData.address}
+              tokenName={tokenData.name}
+              tokenSymbol={tokenData.symbol}
+              tokenLogo={tokenData.logoUrl}
+              price={tokenData.price}
+              priceChange24h={tokenData.priceChange24h}
+              tokenStats={tokenStats}
+              fullTokenData={fullTokenData || undefined}
+            />
+          </div>
 
-      <div className="flex flex-col gap-6">
-        <TradePanel tokenAddress={tokenAddress} />
-        {fullTokenData && <TokenAbout tokenAddress={tokenAddress} token={fullTokenData} />}
+          <div className="lg:col-span-1 min-w-0 flex flex-col gap-6 overflow-y-auto" style={{ height: "calc(100vh - 3.25rem)" }}>
+            <TradePanel tokenAddress={tokenAddress} />
+            {fullTokenData && <TokenAbout tokenAddress={tokenAddress} token={fullTokenData} />}
+          </div>
+        </div>
       </div>
-    </div>
     </div>
   );
 }
