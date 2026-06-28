@@ -14,14 +14,15 @@ export default function Hero() {
 
       <div className="flex flex-col items-center gap-3 desktop:gap-8">
         <div className="flex flex-col items-center gap-2 px-6 pt-10 text-center desktop:pt-20">
-          {/* <div className="flex items-center"> */}
-            {/* <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-primary text-lg font-bold text-white sm:h-12 sm:w-12 sm:text-xl">
-              C
-            </div> */}
-            <span className="text-[120px]/40 font-bold tracking-tight text-slate-300">
-              ChadWallet
-            </span>
-          {/* </div> */}
+            <div className="flex flex-col items-center">
+              <img src="/logo/dark.png"
+                alt="ChadWallet Logo"
+                className="h-20 w-20 desktop:h-32 desktop:w-32"
+              />
+              <span className="text-[120px]/40 font-bold tracking-tight text-slate-300">
+                ChadWallet
+              </span>
+            </div>
           <h1 className="text-[24px] leading-6 tracking-normal font-semibold text-text-primary desktop:text-[37px] desktop:leading-12">
             where traders become legends.
           </h1>
@@ -30,7 +31,6 @@ export default function Hero() {
           </p>
         </div>
 
-        {/* Mobile buttons */}
         <div className="flex gap-2 desktop:hidden">
           <a
             href="https://apps.apple.com/us/app/chadwallet/id6757367474"

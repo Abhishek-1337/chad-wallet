@@ -13,8 +13,10 @@ export default function Home() {
     <div className="relative isolate flex min-h-svh flex-col overflow-x-hidden">
       <AuthRedirect />
       <Navbar />
-      <main className="flex w-full flex-1 flex-col items-center justify-center pt-13">
-        <TokenBanner direction="right" />
+      <main className="relative flex w-full flex-1 flex-col items-center justify-center pt-0">
+        <div className="absolute left-0 top-15 z-10 h-full w-full " >
+          <TokenBanner direction="right" />
+        </div>
         <Hero />
         <AvailableOnWeb />
         <Features />
