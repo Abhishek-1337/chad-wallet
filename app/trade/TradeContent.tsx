@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/shared/Navbar";
-import AuthGuard from "@/components/shared/AuthGuard";
 import TokenList from "@/components/trade/TokenList";
 import TokenChart from "@/components/trade/TokenChart";
 import TradePanel from "@/components/trade/TradePanel";
@@ -47,14 +47,24 @@ const FALLBACK: TokenData = {
 };
 
 function TradeContentInner() {
-  const [tokenAddress, setTokenAddress] = useState<string>(DEFAULT_TOKEN);
+  const searchParams = useSearchParams();
+  const initialToken = searchParams.get("token") || DEFAULT_TOKEN;
+  const [tokenAddress, setTokenAddress] = useState<string>(initialToken);
   const [tokenData, setTokenData] = useState<TokenData>(FALLBACK);
   const [fullTokenData, setFullTokenData] = useState<FullTokenData | null>(null);
   const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
 
   const handleSetToken = useCallback((addr: string) => {
     setTokenAddress(addr);
+    window.history.replaceState(null, "", `/trade?token=${addr}`);
   }, []);
+
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get("token");
+    if (tokenFromUrl && tokenFromUrl !== tokenAddress) {
+      setTokenAddress(tokenFromUrl);
+    }
+  }, [searchParams, tokenAddress]);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,9 +161,7 @@ function TradeContentInner() {
 export default function TradeContent() {
   return (
     <Suspense fallback={null}>
-      <AuthGuard>
-        <TradeContentInner />
-      </AuthGuard>
+      <TradeContentInner />
     </Suspense>
   );
 }
