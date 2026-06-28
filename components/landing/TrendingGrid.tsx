@@ -21,7 +21,7 @@ export default function TrendingGrid() {
     return (
       <div className="w-full max-w-7xl px-4 py-24 sm:px-6">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-text-primary">Live Trending Tokens</h2>
+          <h2 className="text-[60px] font-bold text-text-primary">Live Trending Tokens</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (

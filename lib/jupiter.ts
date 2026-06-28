@@ -1,67 +1,60 @@
-const JUPITER_QUOTE_API = "https://quote-api.jup.ag/v6";
-const JUPITER_SWAP_API = "https://quote-api.jup.ag/v6";
+const BASE_URL = "https://api.jup.ag/swap/v2";
 
-export interface JupiterQuote {
-  inputMint: string;
-  outputMint: string;
-  inAmount: string;
+export interface OrderResponse {
+  transaction: string | null;
+  requestId: string;
   outAmount: string;
-  otherAmountThreshold: string;
-  priceImpactPct: string;
-  routePlan: any[];
-  swapMode: string;
+  router: string;
+  mode: string;
+  feeBps: number;
+  feeMint: string;
+  platformFee?: { amount: string; feeBps: number; feeMint: string };
+  errorCode?: number;
+  errorMessage?: string;
 }
 
-export interface JupiterSwapResponse {
-  swapTransaction: string;
-  lastValidBlockHeight: number;
-  prioritizationFeeLamports: number;
-  computeUnitLimit: number;
-  prioritizationFee: any;
-  dynamicSlippageReport: any;
-  simulationError: any;
+export interface ExecuteResponse {
+  status: "Success" | "Failed";
+  signature: string;
+  code: number;
+  inputAmountResult: string;
+  outputAmountResult: string;
+  error?: string;
 }
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
-export async function getQuote(
+export async function getOrder(
   inputMint: string,
   outputMint: string,
   amount: number,
-  slippageBps = 50
-): Promise<JupiterQuote> {
+  taker: string,
+  slippageBps?: number,
+): Promise<OrderResponse> {
   const params = new URLSearchParams({
     inputMint,
     outputMint,
     amount: Math.floor(amount).toString(),
-    slippageBps: slippageBps.toString(),
+    taker,
   });
-  const res = await fetch(`${JUPITER_QUOTE_API}/quote?${params}`);
-  if (!res.ok) throw new Error(`Jupiter quote error: ${res.status}`);
+  if (slippageBps !== undefined) params.set("slippageBps", slippageBps.toString());
+
+  const res = await fetch(`${BASE_URL}/order?${params}`);
+  if (!res.ok) throw new Error(`Jupiter order error: ${res.status}`);
   return res.json();
 }
 
-export async function getSwapTransaction(
-  quoteResponse: JupiterQuote,
-  userPublicKey: string,
-  wrapAndUnwrapSol = true,
-  dynamicComputeUnitLimit = true,
-  prioritizationFeeLamports: "auto" | number = "auto"
-): Promise<JupiterSwapResponse> {
-  const body = {
-    quoteResponse,
-    userPublicKey,
-    wrapAndUnwrapSol,
-    dynamicComputeUnitLimit,
-    prioritizationFeeLamports,
-  };
-  const res = await fetch(`${JUPITER_SWAP_API}/swap`, {
+export async function executeSwap(
+  signedTransaction: string,
+  requestId: string,
+): Promise<ExecuteResponse> {
+  const res = await fetch(`${BASE_URL}/execute`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ signedTransaction, requestId }),
   });
-  if (!res.ok) throw new Error(`Jupiter swap error: ${res.status}`);
+  if (!res.ok) throw new Error(`Jupiter execute error: ${res.status}`);
   return res.json();
 }
 

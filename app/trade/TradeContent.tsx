@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, Suspense } from "react";
 import Navbar from "@/components/shared/Navbar";
+import AuthGuard from "@/components/shared/AuthGuard";
 import TokenList from "@/components/trade/TokenList";
 import TokenChart from "@/components/trade/TokenChart";
 import TradePanel from "@/components/trade/TradePanel";
@@ -150,7 +151,9 @@ function TradeContentInner() {
 export default function TradeContent() {
   return (
     <Suspense fallback={null}>
-      <TradeContentInner />
+      <AuthGuard>
+        <TradeContentInner />
+      </AuthGuard>
     </Suspense>
   );
 }
