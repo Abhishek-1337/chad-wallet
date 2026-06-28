@@ -32,7 +32,7 @@ export default function Footer() {
         <div className="flex min-w-40 flex-col items-start gap-2">
           <div className="font-mono text-sm text-text-tertiary">SOCIAL</div>
           <a
-            href="https://discord.gg/chadwallet"
+            href="https://discord.com/invite/mdCjtyZ8G"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm transition-colors hover:text-text-secondary"
@@ -40,20 +40,12 @@ export default function Footer() {
             Discord
           </a>
           <a
-            href="https://x.com/chadwallet"
+            href="https://x.com/intent/follow?screen_name=chadwallet"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm transition-colors hover:text-text-secondary"
           >
             X/Twitter
-          </a>
-          <a
-            href="https://t.me/chadwallet"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm transition-colors hover:text-text-secondary"
-          >
-            Telegram
           </a>
         </div>
         <div className="flex min-w-40 flex-col items-start gap-2">
