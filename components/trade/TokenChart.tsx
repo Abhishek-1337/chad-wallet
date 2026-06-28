@@ -170,6 +170,12 @@ function TokenChart({
     };
   }, [tokenAddress, timeframe]);
 
+  useEffect(() => {
+    if (activeTab === "chart" && chartRef.current && chartContainerRef.current) {
+      chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+    }
+  }, [activeTab]);
+
   return (
     <div>
       <div className="mb-6 flex items-center gap-4">
@@ -197,10 +203,7 @@ function TokenChart({
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Token stats info bar */}
-      {tokenStats && (
+        {tokenStats && (
         <div className="relative mb-4 flex-1 min-w-0">
           <div className="no-scrollbar overflow-x-auto overflow-y-hidden cursor-grab">
             <div className="flex w-full">
@@ -232,27 +235,28 @@ function TokenChart({
           <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l to-transparent from-zinc-950" />
         </div>
       )}
+      </div>
 
-      {activeTab === "chart" && (
-        <>
-          <div ref={chartContainerRef} className="mb-4" />
-          <div className="mb-4 flex gap-1">
-            {(["1H", "4H", "1D", "1W", "1M"] as Timeframe[]).map((tf) => (
-              <button
-                key={tf}
-                onClick={() => setTimeframe(tf)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  timeframe === tf
-                    ? "bg-zinc-800 text-white"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
-              >
-                {tf}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      
+
+      <div className={activeTab !== "chart" ? "hidden" : ""}>
+        <div ref={chartContainerRef} className="mb-4" />
+        <div className="mb-4 flex gap-1">
+          {(["1H", "4H", "1D", "1W", "1M"] as Timeframe[]).map((tf) => (
+            <button
+              key={tf}
+              onClick={() => setTimeframe(tf)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                timeframe === tf
+                  ? "bg-zinc-800 text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {tf}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl bg-zinc-900 p-1">
