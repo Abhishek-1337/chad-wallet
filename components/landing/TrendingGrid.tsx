@@ -33,9 +33,9 @@ export default function TrendingGrid() {
   }
 
   return (
-    <div className="w-full max-w-7xl px-4 py-24 sm:px-6">
+    <div className="w-full max-w-500 px-4 py-24 desktop:px-20">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-text-primary">Live Trending Tokens</h2>
+        <h2 className="text-[60px] font-bold text-text-primary">Live Trending Tokens</h2>
         <p className="mt-2 text-text-secondary">Top traded Solana tokens right now</p>
       </div>
 
