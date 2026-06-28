@@ -76,6 +76,7 @@ function TradeContentInner() {
     ])
       .then(([token, priceData, stats]) => {
         if (cancelled) return;
+        console.log("[TradeContent] token:", token, "priceData:", priceData, "stats:", stats);
         if (token && token.address) {
           setTokenData({
             address: token.address,
@@ -102,15 +103,16 @@ function TradeContentInner() {
             freezable: token.freezable,
             info: token.info,
           });
-          console.log(stats);
           setTokenStats(stats);
         } else {
+          console.warn("[TradeContent] token data missing, using fallback");
           setTokenData({ ...FALLBACK, address: tokenAddress });
           setFullTokenData(null);
           setTokenStats(null);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("[TradeContent] fetch error:", err);
         if (!cancelled) {
           setTokenData({ ...FALLBACK, address: tokenAddress });
           setFullTokenData(null);

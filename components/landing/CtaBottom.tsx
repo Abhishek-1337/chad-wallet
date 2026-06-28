@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ArrowRight, Download } from "lucide-react";
 
 export default function CtaBottom() {
@@ -64,7 +65,7 @@ export default function CtaBottom() {
               </div>
               {/* Desktop */}
               <div className="hidden gap-3 desktop:flex">
-                <a
+                <Link
                   href="/trade"
                   className="group z-2 flex w-50 items-center justify-center overflow-hidden rounded-xl border border-bg-tertiary bg-[#606AF780] py-3 text-lg font-bold backdrop-blur-md transition-colors duration-150 hover:bg-[#606AF7CC]"
                 >
@@ -72,7 +73,7 @@ export default function CtaBottom() {
                   <div className="flex w-0 items-center overflow-hidden opacity-0 transition-all duration-150 ease-out group-hover:w-7 group-hover:opacity-100">
                     <ArrowRight size={20} className="ml-2 shrink-0 stroke-2" />
                   </div>
-                </a>
+                </Link>
                 <a
                   href="https://apps.apple.com/us/app/chadwallet/id6757367474"
                   target="_blank"
