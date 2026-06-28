@@ -1,9 +1,10 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { createChart, CandlestickSeries, type IChartApi, type ISeriesApi, type CandlestickData, ColorType } from "lightweight-charts";
 import HoldersList from "./HoldersList";
 import LiveTrades from "./LiveTrades";
+import TokenAbout from "./TokenAbout";
 
 interface TokenChartProps {
   tokenAddress: string;
@@ -12,8 +13,22 @@ interface TokenChartProps {
   tokenLogo?: string;
   price: number;
   priceChange24h: number;
+  fullTokenData?: {
+    description?: string;
+    totalSupply?: string;
+    circulatingSupply?: string;
+    decimals?: number;
+    top10HoldersPercent?: number;
+    creatorAddress?: string;
+    createdAt?: number;
+    socialLinks?: { twitter?: string; telegram?: string; discord?: string; website?: string };
+    launchpad?: { launchpadName?: string; graduationPercent?: number; completed?: boolean; migrated?: boolean; category?: string };
+    mintable?: string;
+    freezable?: string;
+  };
 }
 
+type Tab = "chart" | "holders" | "trades" | "about";
 type Timeframe = "1H" | "4H" | "1D" | "1W" | "1M";
 
 const TIMEFRAME_CONFIG: Record<Timeframe, { interval: string; limit: number }> = {
@@ -31,11 +46,12 @@ function TokenChart({
   tokenLogo,
   price,
   priceChange24h,
+  fullTokenData,
 }: TokenChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const [activeTab, setActiveTab] = useState<"chart" | "holders" | "trades">("chart");
+  const [activeTab, setActiveTab] = useState<Tab>("chart");
   const [timeframe, setTimeframe] = useState<Timeframe>("1W");
 
   // Create chart once on mount
@@ -85,7 +101,7 @@ function TokenChart({
     };
   }, []);
 
-  // Fetch data when token or timeframe changes
+  // Fetch data when token or timeframe changes + poll every 30s
   useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
@@ -112,7 +128,12 @@ function TokenChart({
     };
 
     fetchOHLCV();
-    return () => { cancelled = true; };
+    const intervalId = setInterval(fetchOHLCV, 30000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
   }, [tokenAddress, timeframe]);
 
   return (
@@ -144,28 +165,30 @@ function TokenChart({
         </div>
       </div>
 
-      <div ref={chartContainerRef} className="mb-4" />
-
-      {/* Timeframe selector */}
-      <div className="mb-4 flex gap-1">
-        {(["1H", "4H", "1D", "1W", "1M"] as Timeframe[]).map((tf) => (
-          <button
-            key={tf}
-            onClick={() => setTimeframe(tf)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              timeframe === tf
-                ? "bg-zinc-800 text-white"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            {tf}
-          </button>
-        ))}
-      </div>
+      {activeTab === "chart" && (
+        <>
+          <div ref={chartContainerRef} className="mb-4" />
+          <div className="mb-4 flex gap-1">
+            {(["1H", "4H", "1D", "1W", "1M"] as Timeframe[]).map((tf) => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  timeframe === tf
+                    ? "bg-zinc-800 text-white"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl bg-zinc-900 p-1">
-        {(["chart", "holders", "trades"] as const).map((tab) => (
+        {(["chart", "holders", "trades", "about"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -175,13 +198,18 @@ function TokenChart({
                 : "text-zinc-400 hover:text-white"
             }`}
           >
-            {tab === "chart" ? "Price" : tab === "holders" ? "Holders" : "Live Trades"}
+            {tab === "chart" ? "Price" : tab === "holders" ? "Holders" : tab === "trades" ? "Trades" : "About"}
           </button>
         ))}
       </div>
 
       {activeTab === "holders" && <HoldersList tokenAddress={tokenAddress} />}
       {activeTab === "trades" && <LiveTrades tokenAddress={tokenAddress} />}
+      {activeTab === "about" && (
+        <div className="mt-4">
+          <TokenAbout tokenAddress={tokenAddress} token={fullTokenData} />
+        </div>
+      )}
     </div>
   );
 }

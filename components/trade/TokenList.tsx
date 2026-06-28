@@ -1,8 +1,8 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
-import { getTrendingTokens, type CodexToken } from "@/lib/codex";
+import { getTrendingTokens, getTokenPrices, type CodexToken } from "@/lib/codex";
 
 function formatPrice(price: number): string {
   if (price >= 1) return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -20,13 +20,48 @@ function TokenList({
   const [tokens, setTokens] = useState<CodexToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const initialPrices = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     getTrendingTokens()
-      .then((list) => setTokens(Array.isArray(list) ? list : []))
+      .then((list) => {
+        const arr = Array.isArray(list) ? list : [];
+        setTokens(arr);
+        // Snapshot initial prices for PnL calculation
+        const snapshot = new Map<string, number>();
+        arr.forEach((t) => snapshot.set(t.address, t.price));
+        initialPrices.current = snapshot;
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Poll live prices every 10s
+  useEffect(() => {
+    if (tokens.length === 0) return;
+
+    const poll = async () => {
+      try {
+        const addresses = tokens.map((t) => t.address);
+        const prices = await getTokenPrices(addresses);
+        setTokens((prev) =>
+          prev.map((t) => {
+            const newPrice = prices.get(t.address);
+            if (newPrice !== undefined) {
+              const initial = initialPrices.current.get(t.address) || t.price;
+              const priceChange = initial > 0 ? ((newPrice - initial) / initial) * 100 : 0;
+              return { ...t, price: newPrice, priceChange24h: priceChange };
+            }
+            return t;
+          })
+        );
+      } catch {}
+    };
+
+    poll();
+    const interval = setInterval(poll, 10000);
+    return () => clearInterval(interval);
+  }, [tokens.length]);
 
   const filtered = tokens.filter(
     (t) =>
@@ -58,20 +93,16 @@ function TokenList({
       </div>
 
       <div className="space-y-1 h-full overflow-y-auto">
-        {filtered.map((token, i) => (
+        {filtered.map((token) => (
           <button
             key={token.address}
-            onClick={() => {
-              setToken(token.address);
-              // router.push(`/trade?token=${token.address}`);
-            }}
+            onClick={() => setToken(token.address)}
             className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${
               activeToken === token.address
                 ? "bg-[#8B5CF6]/10"
                 : "hover:bg-zinc-900"
             }`}
           >
-            {/* <span className="w-5 text-xs text-zinc-600">{i + 1}</span> */}
             {token.logoUrl ? (
               <img src={token.logoUrl} alt="" className="h-8 w-8 rounded-full" />
             ) : (

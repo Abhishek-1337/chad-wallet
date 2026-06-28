@@ -149,6 +149,14 @@ const GET_TOKEN_BARS = `
       l
       c
       volume
+      buyers
+      buys
+      buyVolume
+      sellers
+      sells
+      sellVolume
+      traders
+      transactions
     }
   }
 `;
@@ -260,6 +268,17 @@ export async function getTokenPrice(address: string): Promise<{ price: number; p
   });
   const info = data.getTokenPrices?.[0];
   return { price: info?.priceUsd || 0, priceChange24h: 0 };
+}
+
+export async function getTokenPrices(addresses: string[]): Promise<Map<string, number>> {
+  if (addresses.length === 0) return new Map();
+  const inputs = addresses.map((address) => ({ address, networkId: SOLANA_NETWORK }));
+  const data = await gql<{ getTokenPrices: any[] }>(GET_TOKEN_PRICES, { inputs });
+  const prices = new Map<string, number>();
+  for (const p of data.getTokenPrices || []) {
+    if (p.address) prices.set(p.address, p.priceUsd || 0);
+  }
+  return prices;
 }
 
 function resolutionFromInterval(interval: string): string {
