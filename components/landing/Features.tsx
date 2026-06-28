@@ -1,18 +1,23 @@
 const features = [
   {
+    label: "LAUNCH",
+    title: "mint and launch a token in seconds",
+    image: "/fomo-assets/launch-4.png",
+  },
+  {
     label: "LEADERBOARD",
     title: "become a legend, top the leaderboard",
     image: "/fomo-assets/leaderboard.webp",
   },
   {
-    label: "FEED",
-    title: "discover and follow top traders",
-    image: "/fomo-assets/social-static.webp",
+    label: "TRADE",
+    title: "Buy and sell any token in seconds",
+    image: "/fomo-assets/buy-sell.png",
   },
   {
-    label: "ALERTS",
-    title: "real time notifications for what the best are buying",
-    image: "/fomo-assets/alerts-static.webp",
+    label: "FEED",
+    title: "discover and follow top traders",
+    image: "/fomo-assets/kol-4.png",
   },
   {
     label: "EASY ONBOARDING",

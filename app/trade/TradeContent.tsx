@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, Suspense } from "react";
+import Navbar from "@/components/shared/Navbar";
 import TokenList from "@/components/trade/TokenList";
 import TokenChart from "@/components/trade/TokenChart";
 import TradePanel from "@/components/trade/TradePanel";
@@ -103,7 +104,9 @@ function TradeContentInner() {
   }, [tokenAddress]);
 
   return (
-    <div className="grid gap-2 lg:grid-cols-4">
+    <div className="flex min-h-svh flex-col">
+      <Navbar showDownload={false} />
+      <div className="grid gap-2 lg:grid-cols-4 flex-1 p-2">
       <div className="hidden lg:block">
         <TokenList
           activeToken={tokenAddress}
@@ -123,10 +126,11 @@ function TradeContentInner() {
         />
       </div>
 
-      <div>
+      <div className="flex flex-col gap-6">
         <TradePanel tokenAddress={tokenAddress} />
         {fullTokenData && <TokenAbout tokenAddress={tokenAddress} token={fullTokenData} />}
       </div>
+    </div>
     </div>
   );
 }

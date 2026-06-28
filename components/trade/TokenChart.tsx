@@ -53,6 +53,27 @@ function TokenChart({
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("chart");
   const [timeframe, setTimeframe] = useState<Timeframe>("1W");
+  const [livePrice, setLivePrice] = useState<number>(price);
+
+  // Sync livePrice when prop changes (e.g. token switch)
+  useEffect(() => {
+    setLivePrice(price);
+  }, [price]);
+
+  // Poll live price every 10s
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const { getTokenPrice } = await import("@/lib/codex");
+        const data = await getTokenPrice(tokenAddress);
+        if (!cancelled && data.price) setLivePrice(data.price);
+      } catch {}
+    };
+    poll();
+    const id = setInterval(poll, 10000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [tokenAddress]);
 
   // Create chart once on mount
   useEffect(() => {
@@ -149,7 +170,7 @@ function TokenChart({
           </div>
           <div className="flex items-center gap-3">
             <span className="text-2xl font-bold text-white">
-              ${price?.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+              ${livePrice?.toLocaleString(undefined, { maximumFractionDigits: 6 })}
             </span>
             <span
               className={`rounded-md px-2 py-0.5 text-sm font-medium ${

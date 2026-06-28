@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "ChadWallet — Trade Solana at the Speed of Chad",
   description:
     "Solana-native self-custody wallet with built-in trading, real-time prices, and one-click swaps. No seed phrases. No delays. Just Chad.",
+  icons: {
+    icon: "/logo/dark.png",
+  },
   openGraph: {
     title: "ChadWallet",
     description: "The wallet that trades while others wait.",

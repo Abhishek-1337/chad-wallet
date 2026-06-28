@@ -4,9 +4,7 @@ export default function Footer() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 text-text-primary">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-primary text-sm font-bold text-white">
-              C
-            </div>
+            <img src="/logo/dark.png" alt="ChadWallet" className="h-8 w-auto" />
             <span className="text-lg font-bold">ChadWallet</span>
           </div>
           <div className="text-2xl leading-7 tracking-tighter text-text-secondary font-semibold text-[#9899a3]">
