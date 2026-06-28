@@ -12,7 +12,7 @@ export default function Home() {
     <div className="relative isolate flex min-h-svh flex-col overflow-x-hidden">
       <Navbar />
       <main className="relative flex w-full flex-1 flex-col items-center justify-center pt-0">
-        <div className="absolute left-0 top-10 z-10 h-full w-full " >
+        <div className="absolute left-0 top-10 z-1 h-full w-full " >
           <TokenBanner direction="right" />
         </div>
         <Hero />
