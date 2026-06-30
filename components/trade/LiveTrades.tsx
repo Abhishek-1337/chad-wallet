@@ -14,20 +14,27 @@ interface Trade {
 export default function LiveTrades({ tokenAddress }: { tokenAddress: string }) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchTrades = async () => {
       try {
         const { getTokenSwaps } = await import("@/lib/codex");
         const list = await getTokenSwaps(tokenAddress, 20);
+        if (cancelled) return;
         setTrades(Array.isArray(list) ? list : []);
-      } catch {}
-      setLoading(false);
+        setError(null);
+      } catch (e) {
+        if (!cancelled) setError("Failed to load trades");
+        console.error("[LiveTrades] error:", e);
+      }
+      if (!cancelled) setLoading(false);
     };
 
     fetchTrades();
-    const interval = setInterval(fetchTrades, 15000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchTrades, 600000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [tokenAddress]);
 
   if (loading) {
@@ -36,6 +43,14 @@ export default function LiveTrades({ tokenAddress }: { tokenAddress: string }) {
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="h-10 animate-pulse rounded-lg bg-zinc-900" />
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-8 text-center text-sm text-red-400">
+        {error}
       </div>
     );
   }

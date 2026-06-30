@@ -148,7 +148,8 @@ function TokenChart({
         const { getTokenOHLCV } = await import("@/lib/codex");
         const raw = await getTokenOHLCV(tokenAddress, interval, limit);
         if (cancelled) return;
-        if (Array.isArray(raw)) {
+        console.log(`[TokenChart] OHLCV data for ${tokenAddress}:`, raw?.length, "bars");
+        if (Array.isArray(raw) && raw.length > 0) {
           const formatted: CandlestickData[] = raw.map((d: any) => ({
             time: (d.timestamp || d.time) as any,
             open: d.open,
@@ -157,12 +158,16 @@ function TokenChart({
             close: d.close,
           }));
           series.setData(formatted);
+        } else {
+          console.warn("[TokenChart] No OHLCV data received");
         }
-      } catch {}
+      } catch (e) {
+        console.error("[TokenChart] OHLCV fetch error:", e);
+      }
     };
 
     fetchOHLCV();
-    const intervalId = setInterval(fetchOHLCV, 30000);
+    const intervalId = setInterval(fetchOHLCV, 600000);
 
     return () => {
       cancelled = true;
