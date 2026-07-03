@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Navbar from "@/components/shared/Navbar";
+import TradeNavbar from "@/components/trade/TradeNavbar";
 import TokenList from "@/components/trade/TokenList";
 import TokenChart from "@/components/trade/TokenChart";
 import TradePanel from "@/components/trade/TradePanel";
@@ -53,6 +53,7 @@ function TradeContentInner() {
   const [tokenData, setTokenData] = useState<TokenData>(FALLBACK);
   const [fullTokenData, setFullTokenData] = useState<FullTokenData | null>(null);
   const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
+  const [search, setSearch] = useState("");
 
   const handleSetToken = useCallback((addr: string) => {
     setTokenAddress(addr);
@@ -125,13 +126,15 @@ function TradeContentInner() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <Navbar showDownload={false} />
-      {/* <div className="grid gap-2 lg:grid-cols-4 flex-1 p-2 pt-16"> */}
-      <div className="flex p-2 pt-16 min-h-0">
+      <div className="sticky top-0 z-50 flex items-center justify-center border-bg-tertiary bg-bg-primary px-3 py-1">
+        <TradeNavbar search={search} setSearch={setSearch} />
+      </div>
+      <div className="flex flex-1 gap-2 p-2 min-h-0">
         <div className="lg:block">
           <TokenList
             activeToken={tokenAddress}
             setToken={handleSetToken}
+            search={search}
           />
         </div>
 

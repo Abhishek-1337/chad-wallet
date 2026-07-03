@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef, useState } from "react";
-import { Search } from "lucide-react";
+
 import { getTrendingTokens, getTokenPrices, type CodexToken } from "@/lib/codex";
 
 function formatPrice(price: number): string {
@@ -13,13 +13,14 @@ function formatPrice(price: number): string {
 function TokenList({
   activeToken,
   setToken,
+  search,
 }: {
   activeToken: string;
   setToken: (addr: string) => void;
+  search: string;
 }) {
   const [tokens, setTokens] = useState<CodexToken[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const initialPrices = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -79,17 +80,6 @@ function TokenList({
         </div>
       ) : (
         <>
-          <div className="relative mb-4 px-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
-            <input
-              type="text"
-              placeholder="Search tokens..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
-            />
-          </div>
-
           <div className="space-y-1 h-full overflow-y-auto">
             {filtered.map((token) => (
               <button
