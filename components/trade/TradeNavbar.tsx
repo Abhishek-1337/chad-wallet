@@ -42,14 +42,14 @@ export default function TradeNavbar({
           <span className="ml-2 text-lg font-bold text-white">ChadWallet</span>
         </Link>
 
-        <div className="relative w-xl">
+        <div className="relative w-xl py-12">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
           <input
             type="text"
             placeholder="Search tokens or traders..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-2.5 pl-10 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
+            className="w-full rounded-xl border border-zinc-800 py-2.5 pl-10 pr-4 text-sm tracking-wider text-white placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
           />
         </div>
       <div>
