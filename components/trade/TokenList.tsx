@@ -87,7 +87,7 @@ function TokenList({
         </div>
       ) : (
         <>
-          <div className="space-y-1 h-full overflow-y-auto">
+          <div className="no-scrollbar space-y-1 h-full overflow-y-auto">
             {filtered.map((token) => (
               <button
                 key={token.address}

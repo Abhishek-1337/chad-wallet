@@ -28,6 +28,15 @@
   scrollbar-color: #27272a transparent;
 }
 
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);

@@ -153,7 +153,7 @@ function TradeContentInner() {
             />
           </div>
 
-          <div className="lg:col-span-1 min-w-0 flex flex-col gap-6 overflow-y-auto" style={{ height: "calc(100vh - 3.25rem)" }}>
+          <div className="no-scrollbar lg:col-span-1 min-w-0 flex flex-col gap-6 overflow-y-auto" style={{ height: "calc(100vh - 3.25rem)" }}>
             <TradePanel tokenAddress={tokenAddress} />
             {fullTokenData && <TokenAbout tokenAddress={tokenAddress} token={fullTokenData} />}
           </div>
