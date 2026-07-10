@@ -78,7 +78,7 @@ function TokenList({
   );
 
   return (
-    <div className="border-r-2 border-slate-800 h-screen min-w-xs">
+    <div className="border-r-2 border-slate-800 h-screen w-60">
       {loading ? (
         <div className="space-y-3 p-2">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -101,7 +101,7 @@ function TokenList({
                 {token.logoUrl ? (
                   <img src={token.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full border border-zinc-800" />
                 ) : (
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-800 text-xs font-bold text-zinc-400">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-800 text-xs font-bold text-white">
                     {token.symbol?.slice(0, 2)}
                   </div>
                 )}
@@ -109,7 +109,7 @@ function TokenList({
                   <div className="flex min-w-0 items-center gap-1.5">
                     <span className="truncate text-sm leading-4">{token.name}</span>
                   </div>
-                  <div className="text-xs text-zinc-500">{formatPrice(token.price)}</div>
+                  <div className="text-xs text-white">{formatPrice(token.price)}</div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-0.5 tabular-nums">
                   <div className="text-sm leading-4">
