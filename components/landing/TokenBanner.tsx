@@ -41,7 +41,7 @@ export default function TokenBanner({ direction }: TokenBannerProps) {
             )}
             <span className="text-sm font-medium text-text-primary">{token.symbol}</span>
             <span className="text-sm text-text-secondary">
-              ${token.price?.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+              ${Number(token.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <span
               className={`text-xs font-medium ${
@@ -49,7 +49,7 @@ export default function TokenBanner({ direction }: TokenBannerProps) {
               }`}
             >
               {(token.priceChange24h || 0) >= 0 ? "+" : ""}
-              {token.priceChange24h?.toFixed(2)}%
+              {Number(token.priceChange24h || 0).toFixed(2)}%
             </span>
           </button>
         ))}
