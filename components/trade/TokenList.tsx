@@ -92,7 +92,7 @@ function TokenList({
   );
 
   return (
-    <div className="flex h-screen w-70 2xl:w-85 flex-col border-r-2 border-slate-800">
+    <div className="flex h-screen w-70 2xl:w-85 flex-col border rounded-2xl border-bg-secondary">
       <div className="flex shrink-0 items-center rounded-t-xl bg-bg-secondary pl-3">
         <div className="relative min-w-0 flex-1 rounded-xl">
           <div className="p-2 pl-0 no-scrollbar flex cursor-grab items-center gap-2 overflow-x-auto overflow-y-hidden text-sm font-medium bg-bg-secondary rounded-t-xl">

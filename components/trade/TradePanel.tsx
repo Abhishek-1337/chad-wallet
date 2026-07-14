@@ -4,7 +4,7 @@ import { memo, useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets, useSignTransaction } from "@privy-io/react-auth/solana";
 import { VersionedTransaction, PublicKey } from "@solana/web3.js";
-import { ArrowDownUp, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Settings, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { getConnection } from "@/lib/alchemy";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
@@ -17,18 +17,18 @@ function toBase64(bytes: Uint8Array): string {
 
 interface TradePanelProps {
   tokenAddress: string;
+  tokenSymbol?: string;
 }
 
 type TxStatus = "idle" | "signing" | "sending" | "confirmed" | "failed";
 
-function TradePanel({ tokenAddress }: TradePanelProps) {
+function TradePanel({ tokenAddress, tokenSymbol = "Token" }: TradePanelProps) {
   const { ready, authenticated, login } = usePrivy();
   const { wallets } = useWallets();
   const { signTransaction } = useSignTransaction();
   const [mode, setMode] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [quote, setQuote] = useState<{ outAmount: string } | null>(null);
-  const [loading, setLoading] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const [txStatus, setTxStatus] = useState<TxStatus>("idle");
   const [txSignature, setTxSignature] = useState<string | null>(null);
@@ -56,7 +56,6 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
     }
 
     const debounce = setTimeout(async () => {
-      setLoading(true);
       try {
         const params = new URLSearchParams({
           action: "order",
@@ -74,7 +73,6 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
           });
         }
       } catch {}
-      setLoading(false);
     }, 500);
 
     return () => clearTimeout(debounce);
@@ -138,170 +136,145 @@ function TradePanel({ tokenAddress }: TradePanelProps) {
     }
   }, [wallet, userAddress, amount, inputMint, outputMint, signTransaction]);
 
+  const amountValid = !!amount && parseFloat(amount) > 0 && !!quote && !sameMint;
+
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-      <h3 className="mb-4 text-lg font-semibold text-white">Swap</h3>
-
-      {/* Mode toggle */}
-      <div className="mb-6 flex gap-1 rounded-xl bg-zinc-900 p-1">
-        <button
-          onClick={() => setMode("buy")}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            mode === "buy"
-              ? "bg-green-500/20 text-green-500"
-              : "text-zinc-400 hover:text-white"
-          }`}
-        >
-          Buy
-        </button>
-        <button
-          onClick={() => setMode("sell")}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            mode === "sell"
-              ? "bg-red-500/20 text-red-500"
-              : "text-zinc-400 hover:text-white"
-          }`}
-        >
-          Sell
-        </button>
-      </div>
-
-      {/* Input */}
-      <div className="mb-2">
-        <label className="mb-1 block text-xs text-zinc-500">
-          You pay ({mode === "buy" ? "SOL" : "Token"})
-        </label>
-        <div className="relative">
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 pr-20 text-lg text-white outline-none transition-colors focus:border-zinc-700"
-          />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
-            {mode === "buy" ? "SOL" : "Token"}
-          </span>
+    <div className="flex flex-col">
+      <div className="border border-bg-tertiary rounded-2xl p-2 flex flex-col gap-2">
+        {/* Mode toggle */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setMode("buy")}
+            className={`flex-1 p-2 rounded-lg text-base font-bold transition-colors ${
+              mode === "buy"
+                ? "bg-green-transparent text-green"
+                : "bg-bg-secondary hover:bg-bg-tertiary text-text-secondary"
+            }`}
+          >
+            Buy
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("sell")}
+            className={`flex-1 p-2 rounded-lg text-base font-bold transition-colors ${
+              mode === "sell"
+                ? "bg-green-transparent text-green"
+                : "bg-bg-secondary hover:bg-bg-tertiary text-text-secondary"
+            }`}
+          >
+            Sell
+          </button>
         </div>
-      </div>
 
-      {/* Swap icon */}
-      <div className="flex justify-center py-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800">
-          <ArrowDownUp size={14} className="text-zinc-400" />
+        {/* Amount input */}
+        <div className="bg-bg-secondary rounded-xl flex items-stretch text-3xl gap-px cursor-text relative border border-transparent focus-within:border-bg-tertiary">
+          <div className="flex flex-1 min-w-0 items-center gap-px p-4 pr-0">
+            <div className="text-text-tertiary">$</div>
+            <input
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
+              placeholder="0"
+              className="flex-1 min-w-0 bg-transparent outline-none placeholder:text-text-tertiary"
+            />
+          </div>
+          <div className="shrink-0 flex flex-col items-end justify-center p-4 pl-6 relative cursor-pointer">
+            <div className="text-sm font-medium text-text-tertiary">Enter amount</div>
+          </div>
         </div>
-      </div>
 
-      {/* Output */}
-      <div className="mb-6">
-        <label className="mb-1 block text-xs text-zinc-500">
-          You receive ({mode === "buy" ? "Token" : "SOL"})
-        </label>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3">
-          <div className="text-lg text-white">
-            {loading ? (
-              <span className="animate-pulse">Fetching...</span>
-            ) : quote ? (
-              quote.outAmount
-            ) : (
-              "0.00"
+        {/* Quick amounts + settings */}
+        <div className="flex gap-1">
+          <div className="grid grid-cols-4 gap-2 flex-1">
+            {["$10", "$100", "$500", "$1000"].map((label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setAmount(label.replace("$", ""))}
+                className="hover-scrim h-8 rounded-lg bg-bg-secondary px-3 text-sm font-bold text-text-primary"
+                translate="no"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="h-8 w-8 shrink-0 flex items-center justify-center text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            <Settings size={16} />
+          </button>
+        </div>
+
+        {/* Available */}
+        <div className="flex flex-col px-2 text-sm">
+          <div className="flex justify-between items-center">
+            <div className="text-text-secondary">
+              <span translate="no">
+                ${solBalance !== null ? solBalance.toFixed(2) : "0"} available
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Status / CTA */}
+        {txStatus !== "idle" ? (
+          <div className="py-2 h-11 rounded-xl border border-bg-tertiary/60 px-4 text-sm flex items-center overflow-hidden">
+            {txStatus === "signing" && (
+              <span className="flex items-center gap-2 text-yellow-400">
+                <Loader2 size={14} className="animate-spin" /> Signing transaction...
+              </span>
+            )}
+            {txStatus === "sending" && (
+              <span className="flex items-center gap-2 text-yellow-400">
+                <Loader2 size={14} className="animate-spin" /> Sending transaction...
+              </span>
+            )}
+            {txStatus === "confirmed" && (
+              <span className="flex items-center gap-2 text-green">
+                <CheckCircle size={14} /> Swap confirmed
+                {txSignature && (
+                  <a
+                    href={`https://solscan.io/tx/${txSignature}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto underline"
+                  >
+                    View
+                  </a>
+                )}
+              </span>
+            )}
+            {txStatus === "failed" && (
+              <span className="flex items-center gap-2 text-red">
+                <XCircle size={14} /> {error || "Swap failed"}
+              </span>
             )}
           </div>
-          {sameMint && (
-            <div className="mt-1 text-xs text-zinc-500">
-              Select a different token to swap
-            </div>
-          )}
-          {quote && parseFloat(quote.outAmount) > 0 && !sameMint && (
-            <div className="mt-1 text-xs text-zinc-500">
-              Est. ~{quote.outAmount} {mode === "buy" ? "tokens" : "SOL"}
-            </div>
-          )}
-        </div>
+        ) : !ready || !authenticated ? (
+          <button
+            onClick={login}
+            className="py-2 bg-accent-primary text-white h-11 rounded-xl border border-bg-tertiary/60 px-4 text-base font-bold overflow-hidden transition-colors hover:opacity-90"
+          >
+            <span className="inline-block animate-flip-up">Connect Wallet</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleSwap}
+            disabled={swapping || !amountValid}
+            className="py-2 bg-accent-primary text-white h-11 rounded-xl border border-bg-tertiary/60 px-4 text-base font-bold overflow-hidden transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="inline-block animate-flip-up">
+              {swapping ? "Swapping..." : `${mode === "buy" ? "Buy" : "Sell"} ${tokenSymbol}`}
+            </span>
+          </button>
+        )}
       </div>
 
-      {/* Status display */}
-      {txStatus !== "idle" && (
-        <div className="mb-4 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm">
-          {txStatus === "signing" && (
-            <div className="flex items-center gap-2 text-yellow-400">
-              <Loader2 size={14} className="animate-spin" />
-              Signing transaction...
-            </div>
-          )}
-          {txStatus === "sending" && (
-            <div className="flex items-center gap-2 text-yellow-400">
-              <Loader2 size={14} className="animate-spin" />
-              Sending transaction...
-            </div>
-          )}
-          {txStatus === "confirmed" && (
-            <div className="flex items-center gap-2 text-green-400">
-              <CheckCircle size={14} />
-              Swap confirmed
-              {txSignature && (
-                <a
-                  href={`https://solscan.io/tx/${txSignature}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto text-[#8B5CF6] underline"
-                >
-                  View
-                </a>
-              )}
-            </div>
-          )}
-          {txStatus === "failed" && (
-            <div className="flex items-center gap-2 text-red-400">
-              <XCircle size={14} />
-              {error || "Swap failed"}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* CTA */}
-      {!ready || !authenticated ? (
-        <button
-          onClick={login}
-          className="w-full rounded-xl bg-[#8B5CF6] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#7C3AED]"
-        >
-          Connect Wallet to Swap
-        </button>
-      ) : (
-        <button
-          onClick={handleSwap}
-          disabled={swapping || !amount || parseFloat(amount) <= 0 || !quote || sameMint}
-          className="w-full rounded-xl bg-[#8B5CF6] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#7C3AED] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {swapping ? (
-            <span className="flex items-center justify-center gap-2">
-              <Loader2 size={14} className="animate-spin" />
-              Swapping...
-            </span>
-          ) : mode === "buy" ? (
-            "Buy"
-          ) : (
-            "Sell"
-          )}
-        </button>
-      )}
-
-      <div className="mt-4 space-y-2 text-xs text-zinc-500">
-        <div className="flex justify-between">
-          <span>Network</span>
-          <span className="text-zinc-400">Solana</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Slippage</span>
-          <span className="text-zinc-400">0.5%</span>
-        </div>
-        {solBalance !== null && (
-          <div className="flex justify-between">
-            <span>SOL Balance</span>
-            <span className="text-zinc-400">{solBalance.toFixed(4)}</span>
-          </div>
-        )}
+      {/* Expandable area */}
+      <div className="grid transition-[grid-template-rows,margin-top] duration-300 ease-out grid-rows-[0fr] mt-0">
+        <div className="overflow-hidden min-h-0"></div>
       </div>
     </div>
   );

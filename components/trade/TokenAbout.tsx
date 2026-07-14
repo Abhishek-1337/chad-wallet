@@ -95,8 +95,6 @@ export default function TokenAbout({ tokenAddress, token }: TokenAboutProps) {
   if (!token) return null;
 
   const description = token.description || "";
-  const isLong = description.length > 150;
-  const displayText = expanded || !isLong ? description : description.slice(0, 150) + "...";
 
   const totalVol = (stats?.buyVolume || 0) + (stats?.sellVolume || 0);
   const buyVolPct = totalVol > 0 ? (stats!.buyVolume / totalVol) * 100 : 50;
@@ -106,158 +104,132 @@ export default function TokenAbout({ tokenAddress, token }: TokenAboutProps) {
   const buyerPct = totalTraders > 0 ? (stats!.buyers / totalTraders) * 100 : 50;
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* About */}
-      <div className="flex flex-col gap-1 px-1">
-        <span className="text-sm font-medium text-white">
-          About <span>{token.symbol || "---"}</span>
-        </span>
-        {description ? (
-          <div className="flex items-baseline gap-0">
-            <span className="min-w-0 truncate text-xs leading-tight text-zinc-400">
-              {displayText}
+    <div className="relative border border-bg-tertiary rounded-xl p-2 pb-4 mb-6">
+      <div className="flex flex-col gap-3">
+        {/* About */}
+        <div className="px-1 flex flex-col gap-1">
+          <span className="font-medium text-text-primary">
+            About <span translate="no">{token.symbol || "---"}</span>
+          </span>
+          <div className="max-w-[900px] flex items-baseline gap-0">
+            <span className="text-xs leading-tight min-w-0 text-text-tertiary">
+              {description || "No description found"}
             </span>
-            {isLong && (
-              <button
-                type="button"
-                onClick={() => setExpanded(!expanded)}
-                className="shrink-0 text-xs font-bold leading-tight text-zinc-500 hover:text-zinc-300"
-              >
-                {expanded ? "Show less" : "Read more"}
-              </button>
-            )}
           </div>
-        ) : (
-          <span className="text-xs text-zinc-500">No description available.</span>
+        </div>
+
+        {/* Price change buttons */}
+        {stats && (
+          <div className="flex gap-1.5">
+            {(["5M", "1H", "4H", "1D"] as const).map((tf) => {
+              const change = stats.priceChanges[tf];
+              const isUp = change != null && change >= 0;
+              const isSelected = selectedTf === tf;
+              return (
+                <button
+                  key={tf}
+                  type="button"
+                  onClick={() => setSelectedTf(tf)}
+                  className={`flex-1 flex flex-col items-center rounded-md py-1.5 transition-colors border ${
+                    isSelected
+                      ? "bg-bg-tertiary border-transparent"
+                      : "border-bg-tertiary-solid hover:bg-bg-tertiary"
+                  }`}
+                >
+                  <span className="text-xs text-text-secondary">{tf}</span>
+                  {change != null && (
+                    <div className="flex gap-0.75 items-center" translate="no" style={{ lineHeight: "16px" }}>
+                      <div style={{ color: isUp ? "rgb(33, 201, 94)" : "rgb(255, 98, 46)", fontWeight: 400, fontSize: 6 }}>{isUp ? "▲" : "▼"}</div>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: isUp ? "rgb(33, 201, 94)" : "rgb(255, 98, 46)" }}>
+                        {Math.abs(change).toFixed(2)}%
+                      </div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
-      </div>
 
-      {/* Price change buttons */}
-      {stats && (
-        <div className="flex gap-1.5">
-          {(["5M", "1H", "4H", "1D"] as const).map((tf) => {
-            const change = stats.priceChanges[tf];
-            const isUp = change != null && change >= 0;
-            const color = isUp ? "text-green-500" : "text-red-500";
-            const isSelected = selectedTf === tf;
-            return (
-              <button
-                key={tf}
-                type="button"
-                onClick={() => setSelectedTf(tf)}
-                className={`flex flex-1 flex-col items-center rounded-md border py-1.5 transition-colors ${
-                  isSelected
-                    ? "border-zinc-700 bg-zinc-800"
-                    : "border-zinc-800 hover:bg-zinc-800/50"
-                }`}
-              >
-                <span className="text-xs text-zinc-400">{tf}</span>
-                {change != null && (
-                  <div className={`flex items-center gap-0.5 ${color}`}>
-                    <span className="text-[6px]">{isUp ? "▲" : "▼"}</span>
-                    <span className="text-xs font-medium">
-                      {Math.abs(change).toFixed(2)}%
-                    </span>
+        {/* Buy/Sell stats */}
+        {stats && (
+          <div className="flex flex-col gap-3 px-2">
+            <StatBar leftLabel="buys" rightLabel="sells" leftValue={stats.buys} rightValue={stats.sells} pct={buyTxnPct} />
+            <StatBar leftLabel="vol." rightLabel="vol." leftValue={formatVolume(stats.buyVolume)} rightValue={formatVolume(stats.sellVolume)} pct={buyVolPct} />
+            <StatBar leftLabel="buyers" rightLabel="sellers" leftValue={stats.buyers} rightValue={stats.sellers} pct={buyerPct} />
+          </div>
+        )}
+
+        {/* Collapsible links + info */}
+        <div className={`grid transition-[grid-template-rows] duration-200 ease-out px-2 ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+          <div className="overflow-hidden">
+            <div className="flex flex-col gap-2 pt-1">
+              {token.socialLinks && (
+                <div className="flex gap-2 flex-wrap">
+                  {token.socialLinks.website && (
+                    <a href={token.socialLinks.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 rounded-lg bg-bg-secondary border border-bg-tertiary text-xs font-medium hover:opacity-80 transition-opacity">
+                      <GlobeIcon /> Website
+                    </a>
+                  )}
+                  {token.socialLinks.twitter && (
+                    <a href={token.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 rounded-lg bg-bg-secondary border border-bg-tertiary text-xs font-medium hover:opacity-80 transition-opacity">
+                      <TwitterIcon /> Twitter
+                    </a>
+                  )}
+                  {token.socialLinks.telegram && (
+                    <a href={token.socialLinks.telegram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 rounded-lg bg-bg-secondary border border-bg-tertiary text-xs font-medium hover:opacity-80 transition-opacity">
+                      <TelegramIcon /> Telegram
+                    </a>
+                  )}
+                  {token.socialLinks.discord && (
+                    <a href={token.socialLinks.discord} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 rounded-lg bg-bg-secondary border border-bg-tertiary text-xs font-medium hover:opacity-80 transition-opacity">
+                      <DiscordIcon /> Discord
+                    </a>
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1">
+                <InfoRow label="Supply" value={formatSupply(token.totalSupply)} />
+                <InfoRow
+                  label="Network"
+                  value="Solana"
+                  icon={
+                    <svg width="14" height="14" className="text-text-secondary">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" fill="currentColor" opacity="0.3" />
+                      <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" />
+                    </svg>
+                  }
+                />
+                <InfoRow label="Created" value={timeAgo(token.createdAt)} />
+                <div className="flex items-center gap-2 py-1">
+                  <span className="text-xs text-text-secondary whitespace-nowrap shrink-0">Contract address</span>
+                  <div className="flex-1 border-b border-dashed border-bg-tertiary min-w-4 -translate-y-px" />
+                  <div className="flex items-center gap-1 shrink-0 cursor-pointer hover:opacity-70 transition-opacity" onClick={handleCopy}>
+                    <span className="text-xs text-text-primary font-medium whitespace-nowrap" translate="no">{truncateAddress(tokenAddress)}</span>
+                    <div className="w-4 h-4 shrink-0 relative flex items-center justify-center">
+                      {copied ? (
+                        <Check size={16} className="text-green absolute" />
+                      ) : (
+                        <Copy size={16} className="text-text-tertiary absolute" />
+                      )}
+                    </div>
                   </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Buy/Sell stats */}
-      {stats && (
-        <div className="flex flex-col gap-3 px-2">
-          {/* Buys vs Sells */}
-          <StatBar
-            leftLabel="buys"
-            rightLabel="sells"
-            leftValue={stats.buys}
-            rightValue={stats.sells}
-            pct={buyTxnPct}
-          />
-
-          {/* Volume */}
-          <StatBar
-            leftLabel="vol."
-            rightLabel="vol."
-            leftValue={formatVolume(stats.buyVolume)}
-            rightValue={formatVolume(stats.sellVolume)}
-            pct={buyVolPct}
-          />
-
-          {/* Buyers vs Sellers */}
-          <StatBar
-            leftLabel="buyers"
-            rightLabel="sellers"
-            leftValue={stats.buyers}
-            rightValue={stats.sellers}
-            pct={buyerPct}
-          />
-        </div>
-      )}
-
-      {/* Info rows */}
-      <div className="flex flex-col gap-1 px-2 pt-1">
-        <InfoRow label="Supply" value={formatSupply(token.totalSupply)} />
-        <InfoRow
-          label="Network"
-          value="Solana"
-          icon={
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-zinc-400">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" fill="currentColor" opacity="0.3" />
-              <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" />
-              <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" />
-            </svg>
-          }
-        />
-        <InfoRow label="Created" value={timeAgo(token.createdAt)} />
-        <div className="flex items-center gap-2 py-1">
-          <span className="shrink-0 text-xs text-zinc-400">Contract</span>
-          <div className="min-w-4 flex-1 border-b border-dashed border-zinc-800" />
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="flex shrink-0 items-center gap-1 transition-opacity hover:opacity-70"
-          >
-            <span className="whitespace-nowrap text-xs font-medium text-white">
-              {truncateAddress(tokenAddress)}
-            </span>
-            {copied ? (
-              <Check size={14} className="text-green-500" />
-            ) : (
-              <Copy size={14} className="text-zinc-500" />
-            )}
-          </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Social links */}
-      {token.socialLinks && (
-        <div className="flex flex-wrap gap-2 px-2 pt-1">
-          {token.socialLinks.website && (
-            <a href={token.socialLinks.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-medium text-zinc-400 transition-opacity hover:opacity-80">
-              <GlobeIcon /> Website
-            </a>
-          )}
-          {token.socialLinks.twitter && (
-            <a href={token.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-medium text-zinc-400 transition-opacity hover:opacity-80">
-              <TwitterIcon /> Twitter
-            </a>
-          )}
-          {token.socialLinks.telegram && (
-            <a href={token.socialLinks.telegram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-medium text-zinc-400 transition-opacity hover:opacity-80">
-              <TelegramIcon /> Telegram
-            </a>
-          )}
-          {token.socialLinks.discord && (
-            <a href={token.socialLinks.discord} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs font-medium text-zinc-400 transition-opacity hover:opacity-80">
-              <DiscordIcon /> Discord
-            </a>
-          )}
-        </div>
-      )}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 z-10 flex items-center gap-1 px-2 py-1 bg-bg-tertiary-solid rounded-md text-xs font-bold text-text-secondary hover:text-text-primary transition-colors"
+      >
+        {expanded ? "View less" : "View more"}
+      </button>
     </div>
   );
 }
@@ -280,20 +252,20 @@ function StatBar({
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between text-sm">
         <span>
-          <span className="font-medium text-white">{fmt(leftValue)}</span>{" "}
-          <span className="text-zinc-400">{leftLabel}</span>
+          <span className="font-medium text-text-primary">{fmt(leftValue)}</span>{" "}
+          <span className="text-text-secondary">{leftLabel}</span>
         </span>
         <span>
-          <span className="font-medium text-white">{fmt(rightValue)}</span>{" "}
-          <span className="text-zinc-400">{rightLabel}</span>
+          <span className="font-medium text-text-primary">{fmt(rightValue)}</span>{" "}
+          <span className="text-text-secondary">{rightLabel}</span>
         </span>
       </div>
       <div className="flex h-1.5 gap-1">
         <div
-          className="rounded-[1.5px] bg-green-500 transition-[width] duration-150 ease-out"
+          className="bg-green rounded-[1.5px] transition-[width] duration-150 ease-out"
           style={{ width: `${Math.max(pct, 1)}%` }}
         />
-        <div className="flex-1 rounded-[1.5px] bg-red-500" />
+        <div className="flex-1 bg-red rounded-[1.5px]" />
       </div>
     </div>
   );
@@ -310,11 +282,11 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center gap-2 py-1">
-      <span className="shrink-0 text-xs text-zinc-400">{label}</span>
-      <div className="min-w-4 flex-1 border-b border-dashed border-zinc-800" />
+      <span className="shrink-0 text-xs text-text-secondary whitespace-nowrap">{label}</span>
+      <div className="min-w-4 flex-1 border-b border-dashed border-bg-tertiary -translate-y-px" />
       <div className="flex shrink-0 items-center gap-1">
         {icon}
-        <span className="whitespace-nowrap text-xs font-medium text-white">{value}</span>
+        <span className="whitespace-nowrap text-xs font-medium text-text-primary">{value}</span>
       </div>
     </div>
   );
