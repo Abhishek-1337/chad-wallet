@@ -7,8 +7,9 @@ import { getTrendingTokens, getTokenPrices, type CodexToken } from "@/lib/codex"
 function formatPrice(price: number): string {
   const p = Number(price) || 0;
   if (p >= 1) return `$${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  if (p >= 0.01) return `$${p.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
-  return `$${p.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`;
+  if (p >= 0.01) return `$${p.toFixed(4)}`;
+  if (p >= 0.0001) return `$${p.toFixed(6)}`;
+  return `$${p.toFixed(8)}`;
 }
 
 function formatCompact(value: number): string {
@@ -91,10 +92,10 @@ function TokenList({
   );
 
   return (
-    <div className="flex h-screen w-60 2xl:w-85 flex-col border-r-2 border-slate-800">
+    <div className="flex h-screen w-70 2xl:w-85 flex-col border-r-2 border-slate-800">
       <div className="flex shrink-0 items-center rounded-t-xl bg-bg-secondary pl-3">
-        <div className="relative min-w-0 flex-1">
-          <div className="no-scrollbar flex cursor-grab items-center gap-2 overflow-x-auto overflow-y-hidden text-sm font-medium">
+        <div className="relative min-w-0 flex-1 rounded-xl">
+          <div className="p-2 pl-0 no-scrollbar flex cursor-grab items-center gap-2 overflow-x-auto overflow-y-hidden text-sm font-medium bg-bg-secondary rounded-t-xl">
             <button
               onClick={() => setDiscovery("Alerts")}
               className={`flex shrink-0 items-center justify-start gap-1 whitespace-nowrap text-left hover:text-text-primary ${
@@ -150,7 +151,7 @@ function TokenList({
 
       {!collapsed && (
         <div className="relative shrink-0">
-        <div className="no-scrollbar flex cursor-grab gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap pb-1 pt-2">
+        <div className="no-scrollbar flex cursor-grab gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap pb-1 pt-2 px-3">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
@@ -171,59 +172,84 @@ function TokenList({
 
       {!collapsed && (
         loading ? (
-        <div className="space-y-3 p-2">
+        <div className="space-y-2 p-2">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-zinc-900" />
+            <div key={i} className="h-14 animate-pulse rounded-lg bg-bg-tertiary" />
           ))}
         </div>
       ) : (
-        <div className="no-scrollbar flex-1 space-y-1 overflow-y-auto">
-          {filtered.map((token) => (
-            <button
-              key={token.address}
-              onClick={() => setToken(token.address)}
-              className={`flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors ${
-                activeToken === token.address
-                  ? "bg-[#8B5CF6]/10"
-                  : "hover:bg-zinc-900"
-              }`}
-            >
-              {token.logoUrl ? (
-                <img src={token.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full border border-zinc-800" />
-              ) : (
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-800 text-xs font-bold text-white">
-                  {token.symbol?.slice(0, 2)}
-                </div>
-              )}
-              <div className="flex flex-1 min-w-0 flex-col gap-1">
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <span className="truncate text-sm leading-4">{token.name}</span>
-                </div>
-                <div className="text-xs text-white">{formatPrice(token.price)}</div>
-              </div>
-              <div className="flex shrink-0 flex-col items-end gap-0.5 tabular-nums">
-                <div className="text-sm leading-4">
-                  {token.marketCap ? formatCompact(token.marketCap) : "—"} MC
-                </div>
-                <div className="flex items-center gap-0.75" style={{ lineHeight: "16px" }}>
-                  <span
-                    className={`text-xs font-medium ${
-                      (token.priceChange24h || 0) >= 0 ? "text-green-500" : "text-red-500"
+        <div className="flex flex-1 flex-col gap-px overflow-y-scroll overflow-x-hidden px-2 pt-1 min-h-0 border rounded-xl border-bg-secondary">
+          {filtered.map((token) => {
+            const up = (Number(token.priceChange24h) || 0) >= 0;
+            return (
+              <div
+                key={token.address}
+                className="grid grid-rows-[1fr] opacity-100 transition-[grid-template-rows,opacity] duration-150 ease-out"
+              >
+                <div className="overflow-hidden">
+                  <button
+                    onClick={() => setToken(token.address)}
+                    className={`flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-lg p-2 py-2 group focus-visible:bg-bg-secondary ${
+                      activeToken === token.address
+                        ? "bg-bg-tertiary"
+                        : "hover:bg-bg-secondary"
                     }`}
                   >
-                    {(token.priceChange24h || 0) >= 0 ? "▲" : "▼"}
-                  </span>
-                  <span
-                    className={`text-xs font-medium ${
-                      (token.priceChange24h || 0) >= 0 ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {Math.abs(token.priceChange24h || 0).toFixed(2)}%
-                  </span>
+                    <div className="relative shrink-0" style={{ width: 36, height: 36 }}>
+                      {token.logoUrl ? (
+                        <img
+                          src={token.logoUrl}
+                          alt=""
+                          className="rounded-full border border-bg-tertiary"
+                          style={{ height: 36, width: 36 }}
+                        />
+                      ) : (
+                        <div
+                          className="flex items-center justify-center rounded-full border border-bg-tertiary bg-bg-tertiary-solid text-text-tertiary"
+                          style={{ height: 36, width: 36, fontSize: 16 }}
+                        >
+                          ?
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate text-sm leading-4">{token.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                        {formatPrice(token.price)}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-0.5 tabular-nums">
+                      <div className="text-sm leading-4">
+                        {token.marketCap ? formatCompact(token.marketCap) : "—"} MC
+                      </div>
+                      <div className="flex items-center gap-0.75" style={{ lineHeight: "16px" }}>
+                        <div
+                          style={{
+                            color: up ? "rgb(33, 201, 94)" : "rgb(255, 98, 46)",
+                            fontWeight: 400,
+                            fontSize: 6,
+                          }}
+                        >
+                          {up ? "▲" : "▼"}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: up ? "rgb(33, 201, 94)" : "rgb(255, 98, 46)",
+                          }}
+                        >
+                          {Math.abs(Number(token.priceChange24h) || 0).toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                  </button>
                 </div>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       ))}
     </div>

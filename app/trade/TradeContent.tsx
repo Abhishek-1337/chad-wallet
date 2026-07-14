@@ -125,11 +125,11 @@ function TradeContentInner() {
   }, [tokenAddress]);
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="flex min-h-svh flex-col gap-3">
       <div className="sticky top-0 z-50 flex items-center justify-center border-bg-tertiary bg-bg-primary px-3">
         <TradeNavbar search={search} setSearch={setSearch} />
       </div>
-      <div className="flex flex-1 gap-2 p-2 min-h-0">
+      <div className="flex flex-1 gap-2 min-h-0">
         <div className="lg:block">
           <TokenList
             activeToken={tokenAddress}
