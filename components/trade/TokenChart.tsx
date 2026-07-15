@@ -70,6 +70,18 @@ function TokenChart({
   const [activeTab, setActiveTab] = useState<Tab>("chart");
   const [timeframe, setTimeframe] = useState<Timeframe>("1W");
   const [polledPrice, setPolledPrice] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyAddress = () => {
+    navigator.clipboard?.writeText(tokenAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const num = (v: unknown): number => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
 
   // Poll live price every 10s; resets on token change via the effect cleanup + re-run
   useEffect(() => {
@@ -184,62 +196,287 @@ function TokenChart({
   return (
     <div>
       <div className="mb-6 flex items-center gap-4">
-        {tokenLogo && (
-          <img src={tokenLogo} alt="" className="h-10 w-10 rounded-full" />
-        )}
-    <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-white">{tokenSymbol || "SOL"}</h2>
-            <span className="text-sm text-zinc-400">{tokenName || "Solana"}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold text-white">
-              ${livePrice?.toLocaleString(undefined, { maximumFractionDigits: 6 })}
-            </span>
-            <span
-              className={`rounded-md px-2 py-0.5 text-sm font-medium ${
-                (priceChange24h || 0) >= 0
-                  ? "bg-green-500/10 text-green-500"
-                  : "bg-red-500/10 text-red-500"
-              }`}
-            >
-              {(priceChange24h || 0) >= 0 ? "+" : ""}
-              {priceChange24h?.toFixed(2)}%
-            </span>
-          </div>
-        </div>
-        {tokenStats && (
-        <div className="relative mb-4 flex-1 min-w-0">
-          <div className="no-scrollbar overflow-x-auto overflow-y-hidden cursor-grab">
-            <div className="flex w-full">
-              <div className="ml-auto">
-                <div className="flex w-max shrink-0 items-center gap-2 tabular-nums">
-                  <div className="flex flex-col items-center w-26 cursor-default py-2">
-                    <span className="text-xs text-zinc-500">Market cap</span>
-                    <span className="text-lg font-medium leading-tight text-white">{formatCompact(tokenStats.marketCap)}</span>
-                  </div>
-                  <InfoCard label="Price" value={formatPrice(tokenStats.price)} />
-                  <InfoCard
-                    label="24H change"
-                    value={
-                      <span className={`flex items-center gap-0.5 ${tokenStats.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}`}>
-                        <span className="text-[8px]">{tokenStats.priceChange24h >= 0 ? "▲" : "▼"}</span>
-                        <span className="text-sm font-medium">{Math.abs(tokenStats.priceChange24h).toFixed(2)}%</span>
-                      </span>
-                    }
-                  />
-                  <InfoCard label="24H Vol." value={formatCompact(tokenStats.volume24h)} />
-                  <InfoCard label="Liquidity" value={formatCompact(tokenStats.liquidity)} />
-                  <InfoCard label="Holders" value={tokenStats.holders.toLocaleString()} />
-                  <InfoCard label="Top 10 holding" value={`${tokenStats.top10HoldersPercent.toFixed(2)}%`} />
-                </div>
+        <div className="flex gap-3 items-center w-full">
+          <button type="button" aria-label="View token image">
+            <div className="relative shrink-0" style={{ width: 40, height: 40 }}>
+              {tokenLogo && (
+                <img
+                  className="rounded-full border border-bg-tertiary"
+                  src={tokenLogo}
+                  style={{ height: 40, width: 40 }}
+                  alt=""
+                />
+              )}
+              <div
+                className="absolute flex items-center justify-center"
+                style={{ bottom: -4, right: -4 }}
+              >
+                <svg style={{ width: 18, height: 18 }}>
+                  <use href="/images/sprite.svg#badge-check" />
+                </svg>
               </div>
-              <div className="w-4 shrink-0" aria-hidden="true" />
+            </div>
+          </button>
+          <div className="flex flex-col gap-1 w-52 shrink-0">
+            <div className="flex gap-1 items-center">
+              <div className="text-base leading-tight" translate="no">
+                {tokenSymbol || "SOL"}
+              </div>
+              <svg
+                width="20"
+                height="20"
+                className="shrink-0 text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <use href="/images/sprite.svg#robinhood-logo" />
+              </svg>
+              <div className="w-px h-4 bg-bg-tertiary mx-0.5" />
+              <div className="flex gap-1 items-center">
+                {fullTokenData?.socialLinks?.website && (
+                  <a
+                    href={fullTokenData.socialLinks.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center rounded-sm bg-bg-tertiary overflow-hidden p-0.5 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                  >
+                    <svg width="16" height="16">
+                      <use href="/images/sprite.svg#globe" />
+                    </svg>
+                  </a>
+                )}
+                {fullTokenData?.socialLinks?.twitter && (
+                  <a
+                    href={fullTokenData.socialLinks.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center rounded-sm bg-bg-tertiary overflow-hidden p-0.5 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                  >
+                    <svg width="16" height="16">
+                      <use href="/images/sprite.svg#twitter-logo" />
+                    </svg>
+                  </a>
+                )}
+                {fullTokenData?.socialLinks?.telegram && (
+                  <a
+                    href={fullTokenData.socialLinks.telegram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center rounded-sm bg-bg-tertiary overflow-hidden p-0.5 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                  >
+                    <svg width="16" height="16">
+                      <use href="/images/sprite.svg#telegram" />
+                    </svg>
+                  </a>
+                )}
+                <a
+                  href={`https://x.com/search?q=${encodeURIComponent(
+                    tokenAddress + " OR $" + (tokenSymbol || "")
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center rounded-sm bg-bg-tertiary overflow-hidden p-0.5 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-search"
+                    aria-hidden="true"
+                  >
+                    <path d="m21 21-4.34-4.34"></path>
+                    <circle cx="11" cy="11" r="8"></circle>
+                  </svg>
+                </a>
+              </div>
+              <button onClick={copyAddress}>
+                <svg className="size-4 text-text-tertiary">
+                  <use href="/images/sprite.svg#star-empty" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex gap-2 items-center">
+              <div
+                className="text-xs text-text-secondary truncate max-w-32"
+                translate="no"
+              >
+                {tokenName}
+              </div>
+              <div className="w-px h-3 bg-bg-tertiary" />
+              <button
+                type="button"
+                className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                aria-label="Copy address"
+                onClick={copyAddress}
+              >
+                <div className="text-text-tertiary text-xs">
+                  {tokenAddress.slice(0, 6)}...{tokenAddress.slice(-6)}
+                </div>
+                <div className="w-4 h-4 shrink-0 relative flex items-center justify-center">
+                  {!copied ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-copy w-4 h-4 text-text-tertiary absolute transition-all duration-200 opacity-100 scale-100 rotate-0"
+                      aria-hidden="true"
+                    >
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-circle-check w-4 h-4 text-green absolute transition-all duration-200 opacity-100 scale-100 rotate-0"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                  )}
+                </div>
+              </button>
             </div>
           </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l to-transparent from-zinc-950" />
+          {tokenStats && (
+            <div className="relative ml-auto flex-1 min-w-0">
+              <div className="no-scrollbar overflow-x-auto overflow-y-hidden cursor-grab">
+                <div className="flex w-full">
+                  <div className="ml-auto">
+                    <div className="flex w-max shrink-0 items-center gap-2 tabular-nums">
+                      <div className="flex flex-col items-center w-26 cursor-default py-2">
+                        <div className="text-xs text-text-secondary">Market cap</div>
+                        <div
+                          className="text-lg font-medium leading-tight tabular-nums"
+                          translate="no"
+                        >
+                          {formatCompact(num(tokenStats.marketCap))}
+                        </div>
+                      </div>
+                      <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
+                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                          Price
+                        </div>
+                        <div
+                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          translate="no"
+                        >
+                          <span className="tabular-nums" translate="no">
+                            {formatPrice(livePrice)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
+                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                          24H change
+                        </div>
+                        <div
+                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          translate="no"
+                        >
+                          <div
+                            className="flex gap-0.75 items-center"
+                            translate="no"
+                            style={{ lineHeight: "20px" }}
+                          >
+                            <div
+                              style={{
+                                color:
+                                  (priceChange24h || 0) >= 0
+                                    ? "rgb(34,197,94)"
+                                    : "rgb(255, 98, 46)",
+                                fontWeight: 400,
+                                fontSize: 8,
+                              }}
+                            >
+                              {(priceChange24h || 0) >= 0 ? "▲" : "▼"}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 500,
+                                color:
+                                  (priceChange24h || 0) >= 0
+                                    ? "rgb(34,197,94)"
+                                    : "rgb(255, 98, 46)",
+                              }}
+                            >
+                              {Math.abs(priceChange24h || 0).toFixed(2)}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
+                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                          24H Vol.
+                        </div>
+                        <div
+                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          translate="no"
+                        >
+                          {formatCompact(num(tokenStats.volume24h))}
+                        </div>
+                      </div>
+                      <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
+                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                          Liquidity
+                        </div>
+                        <div
+                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          translate="no"
+                        >
+                          {formatCompact(num(tokenStats.liquidity))}
+                        </div>
+                      </div>
+                      <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
+                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                          Holders
+                        </div>
+                        <div
+                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          translate="no"
+                        >
+                          {num(tokenStats.holders).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
+                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                          Top 10 holding
+                        </div>
+                        <div
+                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          translate="no"
+                        >
+                          {num(tokenStats.top10HoldersPercent).toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-4 shrink-0" aria-hidden="true" />
+                </div>
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-linear-to-l to-transparent from-bg-primary" />
+            </div>
+          )}
         </div>
-      )}
       </div>
 
       
@@ -287,17 +524,6 @@ function TokenChart({
           <TokenAbout tokenAddress={tokenAddress} token={fullTokenData} />
         </div>
       )}
-    </div>
-  );
-}
-
-function InfoCard({ label, value }: { label: string; value: string | React.ReactNode }) {
-  return (
-    <div className="flex shrink-0 flex-col items-center rounded-lg bg-zinc-900 min-w-22 px-2 py-1.5">
-      <span className="text-xs text-zinc-500 whitespace-nowrap">{label}</span>
-      <div className="text-sm whitespace-nowrap min-h-5 flex items-center tabular-nums text-white">
-        {value}
-      </div>
     </div>
   );
 }

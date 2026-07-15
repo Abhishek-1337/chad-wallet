@@ -10,6 +10,14 @@
   --color-text-secondary: #eaedff99;
   --color-text-tertiary: #eaedff4d;
   --color-accent-primary: #606af7;
+  --color-accent-primary-transparent: rgba(96, 106, 247, 0.12);
+  --color-green: #21c95e;
+  --color-green-transparent: rgba(33, 201, 94, 0.12);
+  --color-red: #ff622e;
+  --color-bg-tertiary-solid: #1e1e38;
+  --width-75: 18.75rem;
+  --width-90: 22.5rem;
+  --animate-flip-up: flip-up 0.35s ease-out;
   --font-sans: "Aeonik Regular", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --width-50: 12.5rem;
@@ -90,4 +98,17 @@ body {
 
 .animate-spin-slow-reverse {
   animation: spin-slow-reverse 30s linear infinite;
+}
+
+@keyframes flip-up {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.hover-scrim {
+  transition: background-color 0.15s ease;
+}
+
+.hover-scrim:hover {
+  background-color: var(--color-bg-tertiary);
 }

@@ -69,6 +69,7 @@ function TradeContentInner() {
 
   useEffect(() => {
     let cancelled = false;
+    setTokenStats(null);
 
     Promise.all([
       fetch(`/api/codex/token?address=${tokenAddress}`).then((r) => r.json()),

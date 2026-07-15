@@ -41,15 +41,15 @@ export default function TradeNavbar({
           <img src="/logo/dark.png" alt="ChadWallet" className="h-8 w-auto" />
           <span className="ml-2 text-lg font-bold text-white">ChadWallet</span>
         </Link>
-      <div className="flex h-12 items-center gap-2 rounded-xl border px-3 cursor-text border-[#cbd0eb1a] bg-bg-primary hover:bg-bg-secondary">
+      <div className="flex h-12 items-center gap-2 rounded-xl border px-3 cursor-text border-[#cbd0eb1a] bg-bg-primary hover:bg-bg-secondary w-100 xl:w-160 ml-10">
         <div className="relative w-xl py-12">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#474b52]" size={16} />
           <input
             type="text"
             placeholder="Search tokens or traders..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl py-2.5 pl-10 pr-4 text-sm tracking-wider text-white placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
+            className="w-full rounded-xl py-2.5 pl-10 pr-4 text-sm font-normal text-[#f7f7f7] placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
           />
         </div>
         </div>
@@ -108,7 +108,7 @@ export default function TradeNavbar({
                 }}
                 className="group inline-flex items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 group"
               >
-                <div className="flex gap-2 items-center min-w-26">
+                <div className="flex gap-2 items-center justify-between min-w-26">
                   <div className="flex flex-col">
                     <div className="text-sm tabular-nums text-left">$0.00</div>
                     <span className="text-xs">--</span>
@@ -120,7 +120,6 @@ export default function TradeNavbar({
               </button>
             )}
 
-            {/* Dropdown menu */}
             {menuOpen && authenticated && (
               <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-bg-tertiary bg-bg-primary py-1 shadow-xl z-50">
                 <div className="border-b border-bg-tertiary px-3 py-2 text-xs text-text-secondary font-mono">
