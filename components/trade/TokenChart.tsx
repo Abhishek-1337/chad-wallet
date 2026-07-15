@@ -357,29 +357,29 @@ function TokenChart({
                   <div className="ml-auto">
                     <div className="flex w-max shrink-0 items-center gap-2 tabular-nums">
                       <div className="flex flex-col items-center w-26 cursor-default py-2">
-                        <div className="text-xs text-text-secondary">Market cap</div>
+                        <div className="text-xs text-text-secondary font-semibold">Market cap</div>
                         <div
-                          className="text-lg font-medium leading-tight tabular-nums"
+                          className="text-lg leading-tight tabular-nums font-semibold"
                           translate="no"
                         >
                           {formatCompact(num(tokenStats.marketCap))}
                         </div>
                       </div>
                       <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
-                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                        <div className="text-xs text-text-secondary whitespace-nowrap font-semibold">
                           Price
                         </div>
                         <div
                           className="text-sm whitespace-nowrap min-h-5 flex items-center"
                           translate="no"
                         >
-                          <span className="tabular-nums" translate="no">
+                          <span className="tabular-nums font-semibold" translate="no">
                             {formatPrice(livePrice)}
                           </span>
                         </div>
                       </div>
                       <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
-                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                        <div className="text-xs text-text-secondary whitespace-nowrap font-semibold">
                           24H change
                         </div>
                         <div
@@ -412,6 +412,7 @@ function TokenChart({
                                     ? "rgb(34,197,94)"
                                     : "rgb(255, 98, 46)",
                               }}
+                              className="font-semibold"
                             >
                               {Math.abs(priceChange24h || 0).toFixed(2)}%
                             </div>
@@ -419,44 +420,44 @@ function TokenChart({
                         </div>
                       </div>
                       <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
-                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                        <div className="text-xs text-text-secondary whitespace-nowrap font-semibold">
                           24H Vol.
                         </div>
                         <div
-                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          className="text-sm font-semibold whitespace-nowrap min-h-5 flex items-center"
                           translate="no"
                         >
                           {formatCompact(num(tokenStats.volume24h))}
                         </div>
                       </div>
                       <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
-                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                        <div className="text-xs text-text-secondary whitespace-nowrap font-semibold">
                           Liquidity
                         </div>
                         <div
-                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          className="text-sm font-semibold whitespace-nowrap min-h-5 flex items-center"
                           translate="no"
                         >
                           {formatCompact(num(tokenStats.liquidity))}
                         </div>
                       </div>
                       <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
-                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                        <div className="text-xs text-text-secondary whitespace-nowrap font-semibold">
                           Holders
                         </div>
                         <div
-                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          className="text-sm font-semibold whitespace-nowrap min-h-5 flex items-center"
                           translate="no"
                         >
                           {num(tokenStats.holders).toLocaleString()}
                         </div>
                       </div>
                       <div className="bg-bg-secondary rounded-lg flex flex-col items-center min-w-22 px-2 py-1.5">
-                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                        <div className="text-xs text-text-secondary whitespace-nowrap font-semibold">
                           Top 10 holding
                         </div>
                         <div
-                          className="text-sm whitespace-nowrap min-h-5 flex items-center"
+                          className="text-sm font-semibold whitespace-nowrap min-h-5 flex items-center"
                           translate="no"
                         >
                           {num(tokenStats.top10HoldersPercent).toFixed(2)}%

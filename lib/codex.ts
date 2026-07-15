@@ -463,8 +463,8 @@ export async function getTokenSwaps(address: string, limit = 20): Promise<CodexS
   return (data.getTokenEvents?.items || []).map((ev: any) => ({
     walletAddress: ev.maker || "",
     type: ev.eventDisplayType === "Buy" ? ("buy" as const) : ("sell" as const),
-    amount: ev.token0SwapValueUsd || ev.token1SwapValueUsd || 0,
-    price: ev.token1SwapValueUsd || 0,
+    amount: Number(ev.token0SwapValueUsd) || Number(ev.token1SwapValueUsd) || 0,
+    price: Number(ev.token1SwapValueUsd) || 0,
     timestamp: ev.timestamp || "",
     signature: ev.transactionHash || "",
   }));
