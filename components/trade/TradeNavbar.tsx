@@ -41,7 +41,7 @@ export default function TradeNavbar({
           <img src="/logo/dark.png" alt="ChadWallet" className="h-8 w-auto" />
           <span className="ml-2 text-lg font-bold text-white">ChadWallet</span>
         </Link>
-
+      <div className="flex h-12 items-center gap-2 rounded-xl border px-3 cursor-text border-[#cbd0eb1a] bg-bg-primary hover:bg-bg-secondary">
         <div className="relative w-xl py-12">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
           <input
@@ -49,8 +49,9 @@ export default function TradeNavbar({
             placeholder="Search tokens or traders..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-zinc-800 py-2.5 pl-10 pr-4 text-sm tracking-wider text-white placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
+            className="w-full rounded-xl py-2.5 pl-10 pr-4 text-sm tracking-wider text-white placeholder-zinc-500 outline-none transition-colors focus:border-zinc-700"
           />
+        </div>
         </div>
       <div>
         <ul className="group flex-1 list-none justify-center flex gap-2 items-stretch" dir="ltr">
