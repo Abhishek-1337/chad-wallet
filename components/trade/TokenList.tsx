@@ -216,12 +216,12 @@ function TokenList({
                       <div className="flex min-w-0 items-center gap-1.5">
                         <span className="truncate text-sm leading-4">{token.name}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                      <div className="flex items-center gap-1.5 text-xs text-text-secondary font-semibold">
                         {formatPrice(token.price)}
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-0.5 tabular-nums">
-                      <div className="text-sm leading-4">
+                      <div className="text-sm leading-4 font-semibold">
                         {token.marketCap ? formatCompact(token.marketCap) : "—"} MC
                       </div>
                       <div className="flex items-center gap-0.75" style={{ lineHeight: "16px" }}>
